@@ -1,0 +1,562 @@
+/* ===== 全局重置 ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+  min-height: 100vh;
+}
+
+/* ===== 布局 ===== */
+.default-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ===== 头部导航 ===== */
+.header {
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #58a6ff;
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  gap: 24px;
+}
+
+.nav a {
+  color: #e6edf3;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: background 0.3s;
+}
+
+.nav a:hover {
+  background: #30363d;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logout-btn {
+  background: #da3633;
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.logout-btn:hover {
+  background: #f85149;
+}
+
+/* ===== 底部 ===== */
+.footer {
+  background: #161b22;
+  border-top: 1px solid #30363d;
+  padding: 20px;
+  text-align: center;
+  color: #8b949e;
+}
+
+/* ===== 登录/注册 ===== */
+.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #0d1117;
+}
+
+.auth-card {
+  background: #161b22;
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid #30363d;
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-card h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #f0f6fc;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: #e6edf3;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #e6edf3;
+  font-size: 16px;
+}
+
+.auth-btn {
+  width: 100%;
+  padding: 12px;
+  background: #238636;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.error {
+  color: #f85149;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+/* ===== 首页游戏卡片 ===== */
+.home-page { text-align: center; }
+.welcome-text {
+  color: #8b949e;
+  margin: 16px 0 32px;
+  font-size: 18px;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.game-card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 32px 24px;
+  text-decoration: none;
+  color: #e6edf3;
+  transition: transform 0.3s, border-color 0.3s;
+}
+
+.game-card:hover {
+  transform: translateY(-4px);
+  border-color: #58a6ff;
+}
+
+.game-card-icon {
+  font-size: 48px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.play-btn {
+  background: #238636;
+  color: white;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* ======================================== */
+/* ===== 🐍 贪吃蛇专属样式（关键！） ===== */
+/* ======================================== */
+.game-page {
+  text-align: center;
+}
+
+.game-info {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 16px;
+  font-size: 18px;
+  color: #8b949e;
+}
+
+.game-grid-container {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+/* 蛇身：蓝色 */
+.cell.snake {
+  background-color: #4fc3f7;
+  border-radius: 2px;
+}
+
+/* 蛇头：亮绿色（带发光效果） */
+.cell.head {
+  background-color: #00e676;
+  border-radius: 2px;
+  box-shadow: 0 0 8px #00e676;
+}
+
+/* 食物：红色（带脉动动画） */
+.cell.food {
+  background-color: #ff1744;
+  border-radius: 50%;
+  animation: pulse 0.6s infinite alternate;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(0.7); }
+}
+
+/* ======================================== */
+/* ===== 💣 扫雷专属样式（关键！） ===== */
+/* ======================================== */
+.minesweeper-grid {
+  display: inline-grid;
+  gap: 2px;
+  background-color: #333;
+  padding: 4px;
+  border-radius: 4px;
+  margin: 16px auto;
+}
+
+/* 未揭开的格子：深色凸起 */
+.mine-cell.hidden {
+  background-color: #4a4a4a;
+  border: 1px solid #6a6a6a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  user-select: none;
+}
+
+.mine-cell.hidden:hover {
+  background-color: #5a5a5a;
+}
+
+/* 已揭开的格子：浅色凹陷 */
+.mine-cell.revealed {
+  background-color: #2d2d2d;
+  border: 1px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  user-select: none;
+}
+
+/* 数字颜色（扫雷经典配色） */
+.mine-cell.revealed[data-value="1"] { color: #4fc3f7; }
+.mine-cell.revealed[data-value="2"] { color: #81c784; }
+.mine-cell.revealed[data-value="3"] { color: #ff8a65; }
+.mine-cell.revealed[data-value="4"] { color: #ffb74d; }
+.mine-cell.revealed[data-value="5"] { color: #f06292; }
+.mine-cell.revealed[data-value="6"] { color: #ce93d8; }
+
+.game-over-text {
+  color: #f85149;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.game-won-text {
+  color: #3fb950;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.game-controls button {
+  background: #238636;
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+.game-controls button:hover {
+  background: #2ea043;
+}
+
+/* ===== 计数器 ===== */
+.counter-display {
+  margin: 30px 0;
+}
+
+.counter-number {
+  font-size: 80px;
+  font-weight: bold;
+  color: #58a6ff;
+  text-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
+}
+
+.counter-controls {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.counter-controls button {
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+  background: #238636;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.counter-controls button:hover {
+  background: #2ea043;
+}
+
+.counter-step {
+  margin: 20px 0;
+  font-size: 18px;
+}
+
+.counter-step input {
+  width: 60px;
+  padding: 8px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: white;
+  font-size: 18px;
+  text-align: center;
+}
+
+.counter-quick {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.counter-quick button {
+  padding: 8px 20px;
+  background: #30363d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.counter-quick button:hover {
+  background: #484f58;
+}
+/* ===== 💥 数字炸弹专属样式 ===== */
+.bomb-info {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin: 16px 0;
+  font-size: 20px;
+  color: #8b949e;
+}
+
+.bomb-range {
+  background: #161b22;
+  padding: 8px 24px;
+  border-radius: 8px;
+  border: 1px solid #30363d;
+}
+
+.bomb-attempts {
+  background: #161b22;
+  padding: 8px 24px;
+  border-radius: 8px;
+  border: 1px solid #30363d;
+}
+
+.bomb-message {
+  margin: 20px 0;
+  font-size: 22px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bomb-input-area {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.bomb-input {
+  width: 150px;
+  padding: 12px 20px;
+  font-size: 24px;
+  background: #0d1117;
+  border: 2px solid #30363d;
+  border-radius: 8px;
+  color: #e6edf3;
+  text-align: center;
+}
+
+.bomb-input:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+
+.bomb-guess-btn {
+  padding: 12px 32px;
+  font-size: 20px;
+  background: #238636;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.bomb-guess-btn:hover:not(:disabled) {
+  background: #2ea043;
+  transform: scale(1.05);
+}
+
+.bomb-guess-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bomb-new-game-btn {
+  padding: 12px 40px;
+  font-size: 20px;
+  background: #58a6ff;
+  color: #0d1117;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.bomb-new-game-btn:hover {
+  background: #79c0ff;
+  transform: scale(1.05);
+}
+
+.bomb-game-over {
+  margin: 20px 0;
+}
+
+.bomb-history {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 500px;
+  margin: 20px auto;
+}
+
+.bomb-history h3 {
+  margin-bottom: 12px;
+  color: #8b949e;
+}
+
+.bomb-empty {
+  color: #8b949e;
+  font-size: 14px;
+  padding: 16px 0;
+}
+
+.bomb-history-list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.bomb-history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #30363d;
+  font-size: 16px;
+}
+
+.bomb-history-item:last-child {
+  border-bottom: none;
+}
+
+.bomb-history-number {
+  color: #8b949e;
+  width: 70px;
+}
+
+.bomb-history-guess {
+  font-weight: bold;
+  width: 50px;
+  text-align: center;
+  color: #58a6ff;
+}
+
+.bomb-history-result {
+  width: 80px;
+  text-align: right;
+}
+
+.bomb-hit {
+  color: #f85149;
+  font-weight: bold;
+}
