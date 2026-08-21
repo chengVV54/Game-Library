@@ -7,6 +7,8 @@ import Home from './pages/Home'
 import Snake from './pages/Snake'
 import Minesweeper from './pages/Minesweeper'
 import Bomb from './pages/Bomb'
+import Galgame from './pages/Galgame'
+import Level1 from './pages/Galgame/level1'
 
 const routes = [
   {
@@ -56,7 +58,22 @@ const routes = [
         </DefaultLayout>
       </PrivateRoute>
     )
-  }
-]
+  },
+  {
+    path: '/galgame',
+    element: (
+      <PrivateRoute>
+        <DefaultLayout>
+          <Galgame />
+        </DefaultLayout>
+      </PrivateRoute>
+    )
+  },
+  {
+  path: '/galgame/level/1',
+  element: <Level1 />
+}
+]               
+
 
 export default routes

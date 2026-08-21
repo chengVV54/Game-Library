@@ -77,6 +77,22 @@ function Bomb() {
 
   return (
     <div className="game-page">
+      <div style={{ textAlign: 'left', width: '100%', marginLeft: '5mm', marginTop: '5mm' }}>
+        <button
+          onClick={() => window.history.back()}
+          style={{
+            background: 'rgba(100, 180, 255, 0.8)',
+            color: '#fff',
+            border: 'none',
+            padding: '6px 16px',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          ← 返回
+        </button>
+      </div>
       <h1>💣 数字炸弹</h1>
       
       <div className="bomb-info">

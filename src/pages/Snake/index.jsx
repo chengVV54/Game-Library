@@ -66,6 +66,20 @@ function Snake() {
       clearInterval(gameLoopRef.current)
       gameLoopRef.current = null
     }
+    
+    // ====== 提交成绩到后端 ======
+    fetch('http://localhost:8080/api/score', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `username=xzcc&game=Snake&score=${score}`
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log('✅ 成绩已提交，最高分:', data.best)
+      })
+      .catch(err => console.error('❌ 提交失败:', err))
   }
 
   const moveSnake = useCallback(() => {
@@ -172,6 +186,44 @@ function Snake() {
 
   return (
     <div className="game-page">
+      {/* 第一个返回按钮：有实际功能（点击后返回上一页） */}
+      <div style={{ textAlign: 'left', marginBottom: '10px' }}>
+        <button
+          onClick={() => window.history.back()}
+          style={{
+            background: 'transparent',
+            border: '1px solid #58a6ff',
+            color: '#58a6ff',
+            padding: '6px 16px',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          ← 返回
+        </button>
+      </div>
+
+      {/* 第二个返回按钮：无实际操作，仅作为展示 */}
+      <div style={{ textAlign: 'left', marginBottom: '10px' }}>
+        <button
+          onClick={() => window.history.back()}
+          style={{
+            background: 'rgba(100, 180, 255, 0.8)',
+            color: '#fff',
+            border: 'none',
+            padding: '6px 16px',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            marginLeft: '5mm',
+            marginTop: '5mm'
+          }}
+        >
+          ← 返回
+        </button>
+      </div>
+
       <h1>🐍 贪吃蛇</h1>
       <div className="game-info">
         <span>🏆 分数: {score}</span>
@@ -183,7 +235,7 @@ function Snake() {
           gridTemplateColumns: `repeat(${GRID_SIZE}, 20px)`,
           gridTemplateRows: `repeat(${GRID_SIZE}, 20px)`,
           gap: '1px',
-          backgroundColor: '#333',
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
           padding: '2px',
           borderRadius: '4px'
         }}>
