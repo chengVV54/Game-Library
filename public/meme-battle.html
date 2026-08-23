@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>VS 表情包对战模拟器</title>
+    <style>
+        * {margin:0;padding:0;box-sizing:border-box;}
+        body{
+            background:#222;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            padding:10px;
+            color:#fff;
+            font-family:system-ui;
+        }
+        #topBar{
+            font-size:24px;
+            margin-bottom:8px;
+            font-weight:bold;
+        }
+        canvas{
+            border:2px solid #444;
+            background:#3498db;
+            border-radius:8px;
+        }
+        .tip{
+            margin-top:8px;
+            font-size:13px;
+            color:#aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="topBar">🐶 狗队 VS 猫队 🐱</div>
+    <canvas id="gameCanvas" width="630" height="720"></canvas>
+    <div class="tip">自动战斗开始！录制即可制作抖音meme视频</div>
+
+<script>
+// ======================【配置区】======================
+const TEAM_A_NAME = "狗队";    // A队名字
+const TEAM_B_NAME = "猫队";    // B队名字
+
+// 角色配置
+// imgUrl：图片地址（可以换）
+// hp：血量
+// speed：移动速度
+// attackRange：攻击范围
+// damage：每次攻击伤害
+const teamAConfig = [
+    {imgUrl:"/assets/dog-1.png", hp:300, speed:1.8, attackRange:90, damage:0.5},
+];
+
+const teamBConfig = [
+    {imgUrl:"/assets/cat-1.png", hp:280, speed:1.9, attackRange:95, damage:0.45},
+];
+
+const SPRITE_SIZE = 110;   // 角色图片大小
+// ====================================================
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+document.getElementById("topBar").innerText = `${TEAM_A_NAME}  VS  ${TEAM_B_NAME}`;
+
+// 角色类
+class Fighter {
+    constructor(config, team){
+        this.team = team;
+        this.maxHp = config.hp;
+        this.hp = config.hp;
+        this.speed = config.speed;
+        this.attackRange = config.attackRange;
+        this.damage = config.damage;
+        this.alive = true;
+
+        this.img = new Image();
+        this.img.crossOrigin = "anonymous";
+        this.img.src = config.imgUrl;
+
+        // 随机出生位置
+        this.x = Math.random() * (canvas.width - SPRITE_SIZE);
+        this.y = Math.random() * (canvas.height - SPRITE_SIZE);
+
+        // 随机移动方向
+        this.vx = (Math.random() - 0.5) * 2 * this.speed;
+        this.vy = (Math.random() - 0.5) * 2 * this.speed;
+    }
+
+    // 更新位置 + 边界反弹
+    update(){
+        if(!this.alive) return;
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if(this.x <= 0 || this.x + SPRITE_SIZE >= canvas.width){
+            this.vx *= -1;
+        }
+        if(this.y <= 0 || this.y + SPRITE_SIZE >= canvas.height){
+            this.vy *= -1;
+        }
+
+        this.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, this.x));
+        this.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, this.y));
+    }
+
+    // 绘制角色 + 血量条
+    draw(){
+        if(this.alive){
+            ctx.drawImage(this.img, this.x, this.y, SPRITE_SIZE, SPRITE_SIZE);
+            this.drawHpBar();
+        } else {
+            // 死亡：倒地旋转
+            ctx.save();
+            ctx.translate(this.x + SPRITE_SIZE/2, this.y + SPRITE_SIZE/2);
+            ctx.rotate(Math.PI / 2);
+            ctx.drawImage(this.img, -SPRITE_SIZE/2, -SPRITE_SIZE/2, SPRITE_SIZE, SPRITE_SIZE);
+            ctx.restore();
+        }
+    }
+
+    // 十字血量条
+        // 拉长十字架血量条 + 实时血量数字
+    drawHpBar(){
+        // ==================== 尺寸配置 ====================
+        const barW = 90;      // 横向血条的宽度（十字架的横臂）
+        const barH = 24;       // 横向血条的高度
+        const crossLen = 80;   // 竖向血条的高度（十字架的竖臂）
+        const crossW = 28;     // 竖向血条的宽度
+        
+        // ==================== 定位 ====================
+        const px = this.x + SPRITE_SIZE/2;  // 十字架中心X = 角色中心X
+        
+        // 判断角色在画布上半还是下半
+        const centerY = this.y + SPRITE_SIZE/2;           // 角色中心Y
+        const isUpperHalf = centerY < canvas.height / 2;  // 是否在上半部分
+        
+        // 如果角色在上半 → 血条放角色下方（避免超出顶部）
+        // 如果角色在下半 → 血条放角色上方（避免超出底部）
+        const barY = isUpperHalf 
+            ? this.y + SPRITE_SIZE + 10   // 角色下方10px处
+            : this.y - 90;                 // 角色上方90px处
+        
+        // ==================== 血量比例 ====================
+        const hpRatio = Math.max(0, this.hp / this.maxHp);
+        // 例如：hp=150, maxHp=300 → hpRatio=0.5 → 血条只填一半
+        
+        // ==================== 横臂（与竖臂同步减少） ====================
+        ctx.fillStyle = "#222";  // 先画黑色底
+        ctx.fillRect(px - barW/2, barY - barH/2, barW, barH);
+        
+        // 计算竖向白色顶部Y坐标
+        const verticalWhiteTop = barY + crossLen/2 - crossLen * hpRatio;
+        // 横向血条顶部Y坐标
+        const horizontalBarTop = barY - barH/2;
+        
+        let horizontalWhiteHeight;
+        
+        if (verticalWhiteTop <= horizontalBarTop) {
+            // 情况1：竖向白色还没降到横向血条顶部 → 横向满格
+            horizontalWhiteHeight = barH;
+        } else if (verticalWhiteTop >= horizontalBarTop + barH) {
+            // 情况2：竖向白色已经低于横向血条底部 → 横向为空
+            horizontalWhiteHeight = 0;
+        } else {
+            // 情况3：竖向白色正在穿过横向血条 → 横向同步减少
+            horizontalWhiteHeight = (horizontalBarTop + barH) - verticalWhiteTop;
+        }
+        
+        if (horizontalWhiteHeight > 0) {
+            ctx.fillStyle = "#fff";  // 白色剩余（和竖向同步）
+            ctx.fillRect(
+                px - barW/2,                                  // X起点
+                barY + barH/2 - horizontalWhiteHeight,       // Y起点：从底部往上算
+                barW,                                         // 宽度不变
+                horizontalWhiteHeight                         // 高度随竖向同步
+            );
+        }
+        
+        // ==================== 竖臂（血量减少从这里体现） ====================
+        ctx.fillStyle = "#222";  // 先画黑色底
+        ctx.fillRect(px - crossW/2, barY - crossLen/2, crossW, crossLen);
+        
+        ctx.fillStyle = "#fff";  // 白色剩余血量
+        // 关键：从下往上填充
+        // 起始Y = 底部 - 剩余高度
+        // 高度 = 总高度 × 血量比例
+        ctx.fillRect(
+            px - crossW/2,                                    // X起点
+            barY + crossLen/2 - crossLen * hpRatio,          // Y起点（随血量下移）
+            crossW,                                           // 宽度
+            crossLen * hpRatio                                // 高度（随血量减少）
+        );
+        
+        // ==================== 中间血量数字 ====================
+        ctx.fillStyle = "#000";
+        ctx.font = "bold 12px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText(`${Math.ceil(this.hp)}`, px, barY + 4);
+    }
+
+    // 受到伤害
+    takeDamage(dmg){
+        if(!this.alive) return;
+        this.hp -= dmg;
+        if(this.hp <= 0){
+            this.hp = 0;
+            this.alive = false;
+        }
+    }
+
+    // 中心坐标
+    getCenter(){
+        return {
+            x: this.x + SPRITE_SIZE/2,
+            y: this.y + SPRITE_SIZE/2
+        };
+    }
+}
+
+// 初始化两队
+let fighters = [];
+teamAConfig.forEach(c => fighters.push(new Fighter(c, "A")));
+teamBConfig.forEach(c => fighters.push(new Fighter(c, "B")));
+
+// 战斗循环
+function gameLoop(){
+    // 蓝色背景
+    ctx.fillStyle = "#3498db";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 更新位置
+    fighters.forEach(f => f.update());
+
+    // 攻击逻辑
+    for(let a of fighters){
+        if(!a.alive) continue;
+        for(let b of fighters){
+            if(!b.alive) continue;
+            if(a.team === b.team) continue;
+
+            const p1 = a.getCenter();
+            const p2 = b.getCenter();
+            const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+
+            if(dist < a.attackRange){
+                b.takeDamage(a.damage);
+            }
+        }
+    }
+
+    // 绘制所有角色
+    fighters.forEach(f => f.draw());
+
+    // 判断战斗结束
+    const aliveA = fighters.filter(f => f.team === "A" && f.alive).length;
+    const aliveB = fighters.filter(f => f.team === "B" && f.alive).length;
+
+    if(aliveA === 0 || aliveB === 0){
+        const winTeam = aliveA > 0 ? TEAM_A_NAME : TEAM_B_NAME;
+        const survive = aliveA > 0 ? aliveA : aliveB;
+        setTimeout(() => {
+            alert(`⚔️ 战斗结束！\n🏆 胜利：${winTeam}\n👥 剩余存活：${survive}人`);
+        }, 100);
+        return;
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+// 启动
+window.onload = () => {
+    gameLoop();
+};
+</script>
+</body>
+</html>

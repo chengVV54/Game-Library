@@ -7,7 +7,8 @@ function Sidebar() {
 
   const menuItems = [
     { path: '/', label: '首页', icon: '🏠' },
-    { path: '/galgame', label: 'Galgame', icon: '📖' }
+    { path: '/galgame', label: 'Galgame', icon: '📖' },
+    { path: '/vs', label: 'VS', icon: '⚔️' }
   ]
 
   return (

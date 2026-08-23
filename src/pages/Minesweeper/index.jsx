@@ -95,7 +95,7 @@ function Minesweeper() {
   }
 
   const submitScore = (finalTime) => {
-    fetch('http://localhost:8080/api/score', {
+    fetch('https://public-flint-throttle.ngrok-free.dev/api/score', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',

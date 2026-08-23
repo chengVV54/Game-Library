@@ -9,6 +9,7 @@ import Minesweeper from './pages/Minesweeper'
 import Bomb from './pages/Bomb'
 import Galgame from './pages/Galgame'
 import Level1 from './pages/Galgame/level1'
+import NewProject from './pages/VS'
 
 const routes = [
   {
@@ -70,9 +71,19 @@ const routes = [
     )
   },
   {
-  path: '/galgame/level/1',
-  element: <Level1 />
-}
+    path: '/galgame/level/1',
+    element: <Level1 />
+    },
+    {
+    path: '/VS',
+    element: (
+      <PrivateRoute>
+        <DefaultLayout>
+          <NewProject />
+        </DefaultLayout>
+      </PrivateRoute>
+    )
+  }
 ]               
 
 

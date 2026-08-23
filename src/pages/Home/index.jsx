@@ -8,7 +8,7 @@ function Home() {
   const [selectedGame, setSelectedGame] = useState('Snake')
   
   useEffect(() => {
-    fetch('http://localhost:8080/api/games')
+    fetch('https://public-flint-throttle.ngrok-free.dev/api/games')
       .then(res => res.json())
       .then(data => {
         const gameList = data.games.map(game => {
@@ -72,12 +72,12 @@ function Home() {
 
   // 获取排行榜和我的最近成绩
   useEffect(() => {
-    fetch(`http://localhost:8080/api/leaderboard?game=${selectedGame}`)
+    fetch(`https://public-flint-throttle.ngrok-free.dev/api/leaderboard?game=${selectedGame}`)
       .then(res => res.json())
       .then(data => setLeaderboard(data.leaderboard))
       .catch(err => console.error('排行榜获取失败:', err))
     
-    fetch(`http://localhost:8080/api/my-scores?username=xzcc&game=${selectedGame}`)
+    fetch(`https://public-flint-throttle.ngrok-free.dev/api/my-scores?username=xzcc&game=${selectedGame}`)
       .then(res => res.json())
       .then(data => setRecentScores(data.scores))
       .catch(err => console.error('最近成绩获取失败:', err))
