@@ -36,7 +36,6 @@
     <div id="topBar">??? VS ???</div>
 
     <div id="selectArea" style="display:flex; gap:30px; margin-bottom:10px;">
-        <!-- 左侧：A队选择 -->
         <div style="
             background:#1a1a2e;
             border:2px solid #3498db;
@@ -66,7 +65,6 @@
             </div>
         </div>
 
-        <!-- 右侧：B队选择 -->
         <div style="
             background:#1a1a2e;
             border:2px solid #e74c3c;
@@ -125,16 +123,18 @@ const ROLE_DATABASE = {
         speed: 1.8,
         attackRange: 100,
         displayAttackRange: 150,
-        damage: 25
+        damage: 25,
+        burnDamage: 0
     },
     '哈基米': {
         normalImg: "/assets/cat-1.png",
         attackImg: "/assets/cat-1.png",
         hp: 280,
         speed: 1.9,
-        attackRange: 95,
+        attackRange: 100,
         displayAttackRange: 0,
-        damage: 20
+        damage: 20,
+        burnDamage: 0
     }
 };
 // ====================================================
@@ -187,6 +187,8 @@ class Fighter {
         this.attackRange = config.attackRange;
         this.displayAttackRange = config.displayAttackRange || 0;
         this.damage = config.damage;
+        this.burnDamage = config.burnDamage || 0;
+        this.burnTickDamage = 0;
         this.alive = true;
 
         this.normalImg = new Image();
@@ -197,7 +199,6 @@ class Fighter {
         this.attackImg.crossOrigin = "anonymous";
         this.attackImg.src = config.attackImg;
 
-        // 进化图
         this.evolve1NormalImg = config.evolve1NormalImg ? new Image() : null;
         if(this.evolve1NormalImg){
             this.evolve1NormalImg.crossOrigin = "anonymous";
@@ -230,8 +231,11 @@ class Fighter {
         this.attackDisplayFrames = 0;
         this.attackImageFrames = 0;
         this.attackCount = 0;
-        this.evolveStage = 0;   // 0=初始, 1=第一形态, 2=第二形态
+        this.attackCooldown = 0;   // 攻击冷却帧数
+        this.evolveStage = 0;
         this.damageTexts = [];
+        this.burnFrames = 0;
+        this.burnTickCounter = 0;
     }
 
     update(){
@@ -242,6 +246,10 @@ class Fighter {
             return;
         }
 
+        if(this.attackCooldown > 0){
+            this.attackCooldown--;
+        }
+
         if(this.attackDisplayFrames > 0){
             this.attackDisplayFrames--;
             this.img = this.attackImg;
@@ -250,6 +258,26 @@ class Fighter {
         if(this.attackImageFrames > 0){
             this.attackImageFrames--;
             this.img = this.attackImg;
+        }
+
+        if(this.burnFrames > 0){
+            this.burnFrames--;
+            this.burnTickCounter++;
+            if(this.burnTickCounter >= 60){
+                this.burnTickCounter = 0;
+                this.hp -= this.burnTickDamage;
+                this.damageTexts.push({
+                    text: `- ${this.burnTickDamage} 血量（灼烧）`,
+                    x: this.x + SPRITE_SIZE/2,
+                    y: this.y - 20,
+                    frames: 40
+                });
+                if(this.hp <= 0){
+                    this.hp = 0;
+                    this.alive = false;
+                    return;
+                }
+            }
         }
         
         this.x += this.vx;
@@ -339,7 +367,19 @@ class Fighter {
             crossLen * hpRatio
         );
         
-        ctx.fillStyle = "#000";
+        // 数字：根据背景颜色决定文字颜色
+        // 判断数字位置在横臂白色区域还是黑色区域
+        const numberY = barY + 4;
+        const whiteTop = barY + barH/2 - horizontalWhiteHeight;
+        const whiteBottom = barY + barH/2;
+        
+        if(numberY >= whiteTop && numberY <= whiteBottom){
+            // 背景是白色 → 数字黑色
+            ctx.fillStyle = "#000";
+        } else {
+            // 背景是黑色 → 数字白色
+            ctx.fillStyle = "#fff";
+        }
         ctx.font = "bold 12px system-ui";
         ctx.textAlign = "center";
         ctx.fillText(`${Math.ceil(this.hp)}`, px, barY + 4);
@@ -365,12 +405,12 @@ class Fighter {
         }
     }
 
-    takeDamage(dmg){
+    takeDamage(dmg, isBurn){
         if(!this.alive) return;
         this.hp -= dmg;
         
         this.damageTexts.push({
-            text: `- ${dmg} 血量`,
+            text: isBurn ? `- ${dmg} 血量（灼烧）` : `- ${dmg} 血量`,
             x: this.x + SPRITE_SIZE/2,
             y: this.y - 20,
             frames: 40
@@ -382,6 +422,12 @@ class Fighter {
         }
     }
 
+    applyBurn(damage, durationSeconds){
+        this.burnTickDamage = damage;
+        this.burnFrames = durationSeconds * 60;
+        this.burnTickCounter = 0;
+    }
+
     getCenter(){
         return {
             x: this.x + SPRITE_SIZE/2,
@@ -391,9 +437,13 @@ class Fighter {
 }
 
 let fighters = [];
+let battleMode = 0;
+let modeTimer = 0;
 
 function initFighters(){
     fighters = [];
+    battleMode = 0;
+    modeTimer = 0;
     const configA = ROLE_DATABASE[selectedA];
     const configB = ROLE_DATABASE[selectedB];
     fighters.push(new Fighter(configA, "A"));
@@ -404,12 +454,20 @@ function gameLoop(){
     ctx.fillStyle = "#3498db";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    modeTimer++;
+    if(modeTimer >= 480){
+        modeTimer = 0;
+        battleMode = 1;
+    }
+
     fighters.forEach(f => f.update());
 
     fighters.forEach(f => {
         f.img = f.normalImg;
     });
 
+    const attacks = [];
+    
     for(let a of fighters){
         if(!a.alive) continue;
         for(let b of fighters){
@@ -425,55 +483,80 @@ function gameLoop(){
                 a.attackImageFrames = 60;
             }
 
-            if(dist < a.attackRange){
-                let actualDamage = a.damage;
-                
-                a.attackCount++;
-                
-                // 进化判断
-                if(a.attackCount >= 5 && a.evolveStage === 0){
-                    a.evolveStage = 1;
-                    a.normalImg = a.evolve1NormalImg || a.normalImg;
-                    a.attackImg = a.evolve1AttackImg || a.attackImg;
-                    a.img = a.normalImg;
-                    a.attackCount = 0;
-                    actualDamage = a.damage * 1.5;
-                } else if(a.attackCount >= 5 && a.evolveStage === 1 && a.evolve2NormalImg){
-                    a.evolveStage = 2;
-                    a.normalImg = a.evolve2NormalImg;
-                    a.attackImg = a.evolve2AttackImg || a.evolve2NormalImg;
-                    a.img = a.normalImg;
-                    a.attackCount = 0;
-                    actualDamage = a.damage * 2.5;
-                }
-                
-                b.takeDamage(actualDamage);
-
-                a.img = a.attackImg;
-
+            if(battleMode === 1 && a.pauseFrames === 0 && b.pauseFrames === 0 && dist > a.attackRange && dist < a.attackRange * 1.5){
                 const dx = p2.x - p1.x;
                 const dy = p2.y - p1.y;
                 const distance = Math.max(1, dist);
-                const nx = dx / distance;
-                const ny = dy / distance;
+                a.x += (dx / distance) * 1.1;
+                a.y += (dy / distance) * 1.1;
+            }
 
-                a.x -= nx * 5;
-                a.y -= ny * 5;
-                b.x += nx * 5;
-                b.y += ny * 5;
-
-                a.vx = -nx * a.speed;
-                a.vy = -ny * a.speed;
-                b.vx = nx * b.speed;
-                b.vy = ny * b.speed;
-
-                a.pauseFrames = 60;
-                b.pauseFrames = 60;
-
-                a.attackDisplayFrames = 30;
-                b.attackDisplayFrames = 30;
+            if(dist <= a.attackRange && a.attackCooldown === 0 && b.attackCooldown === 0){
+                attacks.push({ a, b, dist, p1, p2 });
             }
         }
+    }
+    
+    // 第一阶段：伤害
+    for(const attack of attacks){
+        const { a, b } = attack;
+        
+        let actualDamage = a.damage;
+        a.attackCount++;
+        
+        if(a.evolve1NormalImg && a.attackCount >= 5 && a.evolveStage === 0){
+            a.evolveStage = 1;
+            a.normalImg = a.evolve1NormalImg;
+            a.attackImg = a.evolve1AttackImg || a.evolve1NormalImg;
+            a.img = a.normalImg;
+            a.attackCount = 0;
+            a.damage = 30;
+            a.burnDamage = 5;
+        } else if(a.evolve2NormalImg && a.attackCount >= 5 && a.evolveStage === 1){
+            a.evolveStage = 2;
+            a.normalImg = a.evolve2NormalImg;
+            a.attackImg = a.evolve2AttackImg || a.evolve2NormalImg;
+            a.img = a.normalImg;
+            a.attackCount = 0;
+            a.damage = 40;
+            a.burnDamage = 8;
+        }
+        
+        actualDamage = a.damage;
+        b.takeDamage(actualDamage, false);
+        
+        if(a.burnDamage > 0 && a.team !== b.team){
+            b.applyBurn(a.burnDamage, 5);
+        }
+        
+        a.img = a.attackImg;
+        a.attackCooldown = 60;
+        b.attackCooldown = 60;
+        a.pauseFrames = 60;
+        b.pauseFrames = 60;
+        a.attackDisplayFrames = 30;
+        b.attackDisplayFrames = 30;
+    }
+    
+    // 第二阶段：统一弹开
+    for(const attack of attacks){
+        const { a, b, dist, p1, p2 } = attack;
+        
+        const dx = p2.x - p1.x;
+        const dy = p2.y - p1.y;
+        const distance = Math.max(1, dist);
+        const nx = dx / distance;
+        const ny = dy / distance;
+
+        a.x -= nx * 5;
+        a.y -= ny * 5;
+        b.x += nx * 5;
+        b.y += ny * 5;
+
+        a.vx = -nx * a.speed;
+        a.vy = -ny * a.speed;
+        b.vx = nx * b.speed;
+        b.vy = ny * b.speed;
     }
 
     fighters.forEach(f => f.draw());
