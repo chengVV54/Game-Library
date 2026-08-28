@@ -36,115 +36,150 @@
     <div id="topBar">??? VS ???</div>
 
     <div id="selectArea" style="display:flex; gap:30px; margin-bottom:10px;">
-        <div style="
-            background:#1a1a2e;
-            border:2px solid #3498db;
-            border-radius:8px;
-            padding:15px;
-            width:220px;
-            text-align:center;
-        ">
+        <div style="background:#1a1a2e;border:2px solid #3498db;border-radius:8px;padding:15px;width:220px;text-align:center;">
             <div style="color:#3498db; font-size:18px; font-weight:bold; margin-bottom:10px;">左边队伍 P1</div>
             <div id="leftChoices" style="display:flex; flex-direction:column; gap:8px;">
-                <div onclick="selectTeam('A', '大狗嚼', this)" style="
-                    background:#3498db;
-                    border-radius:6px;
-                    padding:10px;
-                    cursor:pointer;
-                    color:#fff;
-                    font-weight:bold;
-                ">🐶 大狗嚼</div>
-                <div onclick="selectTeam('A', '哈基米', this)" style="
-                    background:#3498db;
-                    border-radius:6px;
-                    padding:10px;
-                    cursor:pointer;
-                    color:#fff;
-                    font-weight:bold;
-                ">🐱 哈基米</div>
+                <div onclick="selectTeam('A', '大狗嚼', this)" style="background:#3498db;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐶 大狗嚼</div>
+                <div onclick="selectTeam('A', '哈基米', this)" style="background:#3498db;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐱 哈基米</div>
+                <div onclick="selectTeam('A', '哈气猫', this)" style="background:#3498db;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐱 哈气猫</div>
+                <div onclick="selectTeam('A', 'mj虫二', this)" style="background:#3498db;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐛 mj虫二</div>
+                <div onclick="selectTeam('A', '训练木桩', this)" style="background:#3498db;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🪵 训练木桩</div>
             </div>
         </div>
-
-        <div style="
-            background:#1a1a2e;
-            border:2px solid #e74c3c;
-            border-radius:8px;
-            padding:15px;
-            width:220px;
-            text-align:center;
-        ">
+        <div style="background:#1a1a2e;border:2px solid #e74c3c;border-radius:8px;padding:15px;width:220px;text-align:center;">
             <div style="color:#e74c3c; font-size:18px; font-weight:bold; margin-bottom:10px;">右边队伍 P2</div>
             <div id="rightChoices" style="display:flex; flex-direction:column; gap:8px;">
-                <div onclick="selectTeam('B', '大狗嚼', this)" style="
-                    background:#e74c3c;
-                    border-radius:6px;
-                    padding:10px;
-                    cursor:pointer;
-                    color:#fff;
-                    font-weight:bold;
-                ">🐶 大狗嚼</div>
-                <div onclick="selectTeam('B', '哈基米', this)" style="
-                    background:#e74c3c;
-                    border-radius:6px;
-                    padding:10px;
-                    cursor:pointer;
-                    color:#fff;
-                    font-weight:bold;
-                ">🐱 哈基米</div>
+                <div onclick="selectTeam('B', '大狗嚼', this)" style="background:#e74c3c;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐶 大狗嚼</div>
+                <div onclick="selectTeam('B', '哈基米', this)" style="background:#e74c3c;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐱 哈基米</div>
+                <div onclick="selectTeam('B', '哈气猫', this)" style="background:#e74c3c;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐱 哈气猫</div>
+                <div onclick="selectTeam('B', 'mj虫二', this)" style="background:#e74c3c;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐛 mj虫二</div>
+                <div onclick="selectTeam('B', '训练木桩', this)" style="background:#e74c3c;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🪵 训练木桩</div>
             </div>
         </div>
     </div>
 
-    <button id="startBtn" style="
-        padding: 12px 24px;
-        font-size: 18px;
-        background: #fff;
-        color: #222;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        margin-bottom: 10px;
-        font-weight: bold;
-    ">⚔️ 开始对决</button>    
-    <canvas id="gameCanvas" width="630" height="720"></canvas>
-    <div class="tip">自动战斗开始！录制即可制作抖音meme视频</div>
+    <button id="startBtn" style="padding:12px 24px;font-size:18px;background:#fff;color:#222;border:none;border-radius:8px;cursor:pointer;margin-bottom:10px;font-weight:bold;">⚔️ 开始对决</button>
+    <canvas id="gameCanvas" width="630" height="630"></canvas>
+    <div class="tip">@xzcc</div>
 
 <script>
 // ======================【角色数据库】======================
 const ROLE_DATABASE = {
     '大狗嚼': {
-        normalImg: "/assets/dog-1.png",
-        attackImg: "/assets/dog-2.png",
-        evolve1NormalImg: "/assets/reddog-1.png",
-        evolve1AttackImg: "/assets/reddog-2.png",
-        evolve2NormalImg: "/assets/bluedog-1.png",
-        evolve2AttackImg: "/assets/bluedog-2.png",
-        hp: 300,
-        speed: 1.8,
-        attackRange: 100,
-        displayAttackRange: 150,
-        damage: 25,
-        burnDamage: 0
+        normalImg: "/assets/dog-1.png", attackImg: "/assets/dog-2.png",
+        evolve1NormalImg: "/assets/reddog-1.png", evolve1AttackImg: "/assets/reddog-2.png",
+        evolve2NormalImg: "/assets/bluedog-1.png", evolve2AttackImg: "/assets/bluedog-2.png",
+        hp: 300, speed: 1.8, attackRange: 100, displayAttackRange: 150,
+        damage: 25, burnDamage: 0, attackType: 'melee'
     },
     '哈基米': {
-        normalImg: "/assets/cat-1.png",
-        attackImg: "/assets/cat-1.png",
-        hp: 280,
-        speed: 1.9,
-        attackRange: 100,
-        displayAttackRange: 0,
-        damage: 20,
-        burnDamage: 0
+        normalImg: "/assets/cat-1.png", attackImg: "/assets/cat-1.png",
+        hp: 280, speed: 1.9, attackRange: 100, displayAttackRange: 150,
+        damage: 20, burnDamage: 0, attackType: 'ranged'
+    },
+    '哈气猫': {
+        normalImg: "/assets/standcat-1.png", attackImg: "/assets/standcat-2.png",
+        hp: 280, speed: 1.7, attackRange: 100, displayAttackRange: 150,
+        damage: 22, burnDamage: 0, hasCombo: true, attackType: 'melee'
+    },
+    'mj虫二': {
+        normalImg: "/assets/mj.png", attackImg: "/assets/mj.png",
+        hp: 600, speed: 1.7, attackRange: 9999, displayAttackRange: 0,
+        damage: 8, burnDamage: 0, attackType: 'special', isMjChong: true
+    },
+    '训练木桩': {
+        normalImg: "/assets/trainwood.png", attackImg: "/assets/trainwood.png",
+        hp: 10000, speed: 0, attackRange: 0, displayAttackRange: 0,
+        damage: 0, burnDamage: 0, attackType: 'none'
+    },
+    '召唤物近战': {
+        normalImg: "/assets/mj2.png", attackImg: "/assets/mj2.png",
+        hp: 85, speed: 1.9, attackRange: 100, displayAttackRange: 0,
+        damage: 8, burnDamage: 0, attackType: 'melee'
+    },
+    '召唤物远程': {
+        normalImg: "/assets/mj1.png", attackImg: "/assets/mj1.png",
+        hp: 60, speed: 1.7, attackRange: 9999, displayAttackRange: 0,
+        damage: 10, burnDamage: 0, attackType: 'ranged'
     }
 };
 // ====================================================
 
-const SPRITE_SIZE = 110;
+const SPRITE_SIZE = 120;
+
+// ======================【音效系统】======================
+let globalAudioCtx = null;
+function getAudioCtx(){
+    if(!globalAudioCtx){
+        globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return globalAudioCtx;
+}
+function playDogSound(){
+    const audio = new Audio('/mp3/dog1.mp3');
+    audio.volume = 0.6;
+    audio.play();
+}
+function playCatHissSound(){
+    const audioCtx = getAudioCtx();
+    const bufferSize = audioCtx.sampleRate * 0.4;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i = 0; i < bufferSize; i++){
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / bufferSize * 2) * 0.5;
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.4;
+    noise.connect(gain);
+    gain.connect(audioCtx.destination);
+    noise.start();
+}
+function playDogEvolveSound(){
+    const audio = new Audio('/mp3/dogangry.mp3');
+    audio.volume = 0.8;
+    audio.play();
+}
+function playBellSound(){
+    const audioCtx = getAudioCtx();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+}
+
+function playBubbleSound(){
+    const audioCtx = getAudioCtx();
+    
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+    osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.25);
+    
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.25);
+}
+// ====================================================
 
 // ======================【选择系统】======================
 let selectedA = null;
 let selectedB = null;
-
 function selectTeam(team, name, element){
     if(team === 'A'){
         selectedA = name;
@@ -165,7 +200,6 @@ function selectTeam(team, name, element){
     }
     updateTopBar();
 }
-
 function updateTopBar(){
     const nameA = selectedA || "???";
     const nameB = selectedB || "???";
@@ -177,10 +211,84 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 updateTopBar();
 
+// ======================【子弹系统】======================
+let bullets = [];
+
+class Bullet {
+    constructor(x, y, targetX, targetY, damage, isMjText, imgSrc, team, canBounce){
+        this.x = x;
+        this.y = y;
+        this.targetX = targetX;
+        this.targetY = targetY;
+        this.damage = damage;
+        this.isMjText = isMjText;
+        this.team = team;
+        this.canBounce = canBounce || false;
+        this.bounces = 0;
+        this.img = imgSrc ? new Image() : null;
+        if(this.img){
+            this.img.crossOrigin = "anonymous";
+            this.img.src = imgSrc;
+        }
+        this.alive = true;
+        this.speed = 6;
+        this.bounces = 0;
+        
+        // 计算方向
+        const dx = targetX - x;
+        const dy = targetY - y;
+        const dist = Math.max(1, Math.hypot(dx, dy));
+        this.vx = (dx / dist) * this.speed;
+        this.vy = (dy / dist) * this.speed;
+    }
+    
+    update(){
+        if(this.canBounce){
+            this.x += this.vx;
+            this.y += this.vy;
+            
+            if(this.x <= 0 || this.x >= canvas.width){
+                this.vx *= -0.9;
+                this.bounces++;
+                this.x = Math.max(0, Math.min(canvas.width, this.x));
+            }
+            if(this.y <= 0 || this.y >= canvas.height){
+                this.vy *= -0.9;
+                this.bounces++;
+                this.y = Math.max(0, Math.min(canvas.height, this.y));
+            }
+            if(this.bounces >= 3){
+                this.alive = false;
+            }
+        } else {
+            const dx = this.targetX - this.x;
+            const dy = this.targetY - this.y;
+            const dist = Math.max(1, Math.hypot(dx, dy));
+            this.x += (dx / dist) * this.speed;
+            this.y += (dy / dist) * this.speed;
+            if(dist < 10) this.alive = false;
+        }
+    }
+    
+    draw(){
+        if(this.isMjText){
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 22px system-ui";
+            ctx.textAlign = "center";
+            ctx.fillText("mj", this.x, this.y);
+        } else if(this.img){
+            ctx.drawImage(this.img, this.x - 15, this.y - 15, 30, 30);
+        }
+    }
+}
+// ====================================================
+
+
 class Fighter {
     constructor(config, team){
         this.team = team;
         this.teamLabel = team === 'A' ? 'P1' : 'P2';
+        this.name = config.name || '';
         this.maxHp = config.hp;
         this.hp = config.hp;
         this.speed = config.speed;
@@ -189,12 +297,14 @@ class Fighter {
         this.damage = config.damage;
         this.burnDamage = config.burnDamage || 0;
         this.burnTickDamage = 0;
+        this.hasCombo = config.hasCombo || false;
+        this.attackType = config.attackType || 'melee';
+        this.isMjChong = config.isMjChong || false;
         this.alive = true;
 
         this.normalImg = new Image();
         this.normalImg.crossOrigin = "anonymous";
         this.normalImg.src = config.normalImg;
-
         this.attackImg = new Image();
         this.attackImg.crossOrigin = "anonymous";
         this.attackImg.src = config.attackImg;
@@ -222,8 +332,13 @@ class Fighter {
 
         this.img = this.normalImg;
 
-        this.x = Math.random() * (canvas.width - SPRITE_SIZE);
-        this.y = Math.random() * (canvas.height - SPRITE_SIZE);
+        if(this.name === '训练木桩'){
+            this.x = canvas.width / 2 - SPRITE_SIZE / 2;
+            this.y = canvas.height / 2 - SPRITE_SIZE / 2;
+        } else {
+            this.x = Math.random() * (canvas.width - SPRITE_SIZE);
+            this.y = Math.random() * (canvas.height - SPRITE_SIZE);
+        }
 
         this.vx = (Math.random() - 0.5) * 2 * this.speed;
         this.vy = (Math.random() - 0.5) * 2 * this.speed;
@@ -231,11 +346,25 @@ class Fighter {
         this.attackDisplayFrames = 0;
         this.attackImageFrames = 0;
         this.attackCount = 0;
-        this.attackCooldown = 0;   // 攻击冷却帧数
+        this.attackCooldown = 0;
+        this.chaseTimer = 0;
         this.evolveStage = 0;
         this.damageTexts = [];
+        this.healTexts = [];
         this.burnFrames = 0;
         this.burnTickCounter = 0;
+        this.comboMode = false;
+        this.comboStep = 0;
+        this.comboTimer = 0;
+        this.comboTarget = null;
+        this.comboAttackCount = 0;
+        this.stunFrames = 0;
+        this.stunTextFrames = 0;
+        
+        // mj虫二专属
+        this.mjAttackInterval = 250;   // 初始2秒
+        this.mjHitCount = 0;           // 命中次数
+        this.mjSummonProgress = 0;     // 召唤进度
     }
 
     update(){
@@ -243,6 +372,86 @@ class Fighter {
         
         if(this.pauseFrames > 0){
             this.pauseFrames--;
+            return;
+        }
+
+        if(this.stunFrames > 0){
+            this.stunFrames--;
+            return;
+        }
+
+        if(this.comboMode){
+            this.comboTimer--;
+            const target = this.comboTarget;
+            
+            if(this.comboStep === 0){
+                if(target && target.alive){
+                    const dx = target.x - this.x;
+                    const dy = target.y - this.y;
+                    const dist = Math.max(1, Math.hypot(dx, dy));
+                    this.x += (dx / dist) * 8;
+                    this.y += (dy / dist) * 8;
+                    if(dist < 30){
+                        this.comboStep = 1;
+                        this.comboTimer = 0;
+                    }
+                }
+            } else if(this.comboStep === 1){
+                if(target && target.alive){
+                    const dx = target.x - this.x;
+                    const dy = target.y - this.y;
+                    const dist = Math.max(1, Math.hypot(dx, dy));
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+                    target.x += nx * 20;
+                    target.y += ny * 20;
+                    if(target.x <= 0 || target.x + SPRITE_SIZE >= canvas.width ||
+                       target.y <= 0 || target.y + SPRITE_SIZE >= canvas.height){
+                        target.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, target.x));
+                        target.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, target.y));
+                        target.stunFrames = 300;
+                        target.stunTextFrames = 60;
+                        playBellSound();
+                        this.comboStep = 2;
+                        this.comboTimer = 0;
+                    }
+                }
+            } else if(this.comboStep === 2){
+                if(target && target.alive){
+                    const dx = target.x - this.x;
+                    const dy = target.y - this.y;
+                    const dist = Math.max(1, Math.hypot(dx, dy));
+                    this.x += (dx / dist) * 10;
+                    this.y += (dy / dist) * 10;
+                    if(dist < this.attackRange){
+                        this.comboStep = 3;
+                        this.comboTimer = 0;
+                        this.comboAttackCount = 0;
+                    }
+                }
+            } else if(this.comboStep === 3){
+                if(target && target.alive && this.comboTimer <= 0){
+                    playCatHissSound();
+                    target.takeDamage(this.damage * 0.4, false);
+                    this.comboAttackCount++;
+                    this.comboTimer = 24;
+                    if(this.comboAttackCount >= 5){
+                        this.comboMode = false;
+                        this.attackCooldown = 60;
+                        const dx = target.x - this.x;
+                        const dy = target.y - this.y;
+                        const dist = Math.max(1, Math.hypot(dx, dy));
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        this.x -= nx * 50;
+                        this.y -= ny * 50;
+                        this.vx = -nx * this.speed * 2;
+                        this.vy = -ny * this.speed * 2;
+                        this.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, this.x));
+                        this.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, this.y));
+                    }
+                }
+            }
             return;
         }
 
@@ -254,7 +463,6 @@ class Fighter {
             this.attackDisplayFrames--;
             this.img = this.attackImg;
         }
-
         if(this.attackImageFrames > 0){
             this.attackImageFrames--;
             this.img = this.attackImg;
@@ -270,43 +478,156 @@ class Fighter {
                     text: `- ${this.burnTickDamage} 血量（灼烧）`,
                     x: this.x + SPRITE_SIZE/2,
                     y: this.y - 20,
-                    frames: 40
+                    frames: 90
                 });
                 if(this.hp <= 0){
                     this.hp = 0;
                     this.alive = false;
+                    
+                    // 寻找施加灼烧的大狗嚼
+                    for(let f of fighters){
+                        if(f.alive && f.name === '大狗嚼' && f.team !== this.team){
+                            f.hp = Math.min(f.maxHp, f.hp + 100);
+                            f.healTexts.push({
+                                text: `+ 100 血量`,
+                                x: f.x + SPRITE_SIZE/2,
+                                y: f.y - 20,
+                                frames: 120
+                            });
+                            break;
+                        }
+                    }
                     return;
                 }
             }
         }
-        
+
+        // mj虫二专属攻击
+        if(this.isMjChong){
+            this.mjAttackInterval--;
+            if(this.mjAttackInterval <= 0){
+                let target = null;
+                let minDist = Infinity;
+                for(let f of fighters){
+                    if(!f.alive || f.team === this.team) continue;
+                    const d = Math.hypot(f.x - this.x, f.y - this.y);
+                    if(d < minDist){
+                        minDist = d;
+                        target = f;
+                    }
+                }
+                if(target){
+                    console.log('mj虫二发射子弹，alive:', this.alive, 'hp:', this.hp);
+                    const mjBulletAudio = new Audio('/mp3/mjzidan.mp3');
+                    mjBulletAudio.volume = 0.4;
+                    mjBulletAudio.play();                    
+                    playBubbleSound();
+                    
+                    bullets.push(new Bullet(
+                        this.x + SPRITE_SIZE/2, this.y + SPRITE_SIZE/2,
+                        target.x + SPRITE_SIZE/2, target.y + SPRITE_SIZE/2,
+                        this.damage, true, null, this.team, true
+                    ));
+                    // 攻速递增
+                    this.mjAttackInterval = Math.max(20, 250 * Math.pow(0.975, this.mjHitCount));
+                    this.mjHitCount++;
+                }
+            }
+        }
+
+        // 近战追击
+        if(this.attackType === 'melee'){
+            this.chaseTimer++;
+            const meleeCount = fighters.filter(f => f.alive && f.attackType === 'melee').length;
+            if(meleeCount === 1){
+                if(this.chaseTimer > 840){
+                    this.chaseToEnemy();
+                }
+            } else if(meleeCount === 2){
+                const shouldChase = (chaseTurn === 1 && this.team === 'A') || 
+                                    (chaseTurn === 2 && this.team === 'B');
+                if(shouldChase && this.chaseTimer > 840){
+                    this.chaseToEnemy();
+                }
+            }
+        }
+
         this.x += this.vx;
         this.y += this.vy;
-
         if(this.x <= 0 || this.x + SPRITE_SIZE >= canvas.width){
             this.vx *= -1;
         }
         if(this.y <= 0 || this.y + SPRITE_SIZE >= canvas.height){
             this.vy *= -1;
         }
-
         this.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, this.x));
         this.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, this.y));
     }
 
-    draw(){
-        if(this.alive){
-            ctx.drawImage(this.img, this.x, this.y, SPRITE_SIZE, SPRITE_SIZE);
-            this.drawTeamLabel();
-            this.drawHpBar();
+    chaseToEnemy(){
+        let target = null;
+        let minDist = Infinity;
+        for(let f of fighters){
+            if(f === this || f.team === this.team || !f.alive) continue;
+            const d = Math.hypot(f.x - this.x, f.y - this.y);
+            if(d < minDist){
+                minDist = d;
+                target = f;
+            }
         }
+        if(target){
+            const dx = target.x - this.x;
+            const dy = target.y - this.y;
+            const dist = Math.max(1, Math.hypot(dx, dy));
+            this.x += (dx / dist) * this.speed * 1.05;
+            this.y += (dy / dist) * this.speed * 1.05;
+        }
+    }
+
+    draw(){
+        if(!this.alive) return;
+        
+        let nearestEnemy = null;
+        let nearestDist = Infinity;
+        for(let f of fighters){
+            if(f === this || f.team === this.team || !f.alive) continue;
+            const dist = Math.hypot(f.x - this.x, f.y - this.y);
+            if(dist < nearestDist){
+                nearestDist = dist;
+                nearestEnemy = f;
+            }
+        }
+        
+        ctx.save();
+        if(nearestEnemy && nearestEnemy.x < this.x){
+            ctx.translate(this.x + SPRITE_SIZE, this.y);
+            ctx.scale(-1, 1);
+            ctx.drawImage(this.img, 0, 0, SPRITE_SIZE, SPRITE_SIZE);
+        } else {
+            ctx.drawImage(this.img, this.x, this.y, SPRITE_SIZE, SPRITE_SIZE);
+        }
+        ctx.restore();
+        
+        this.drawTeamLabel();
+        this.drawHpBar();
         this.drawDamageTexts();
+        this.drawHealTexts();
+        this.drawStunText();
+        
+        // mj虫二召唤进度条
+        if(this.isMjChong){
+            const barX = this.x;
+            const barY = this.y + SPRITE_SIZE + 15;
+            ctx.fillStyle = "#333";
+            ctx.fillRect(barX, barY, SPRITE_SIZE, 8);
+            ctx.fillStyle = "#ffd700";
+            ctx.fillRect(barX, barY, SPRITE_SIZE * this.mjSummonProgress, 8);
+        }
     }
 
     drawTeamLabel(){
         const px = this.x + SPRITE_SIZE/2;
         const py = this.y - 10;
-        
         ctx.fillStyle = "#fff";
         ctx.font = "bold 16px system-ui";
         ctx.textAlign = "center";
@@ -318,26 +639,17 @@ class Fighter {
         const barH = 24;
         const crossLen = 80;
         const crossW = 28;
-        
         const px = this.x + SPRITE_SIZE/2;
-        
         const centerY = this.y + SPRITE_SIZE/2;
         const isUpperHalf = centerY < canvas.height / 2;
-        
-        const barY = isUpperHalf 
-            ? this.y + SPRITE_SIZE + 10
-            : this.y - 90;
-        
+        const barY = isUpperHalf ? this.y + SPRITE_SIZE + 10 : this.y - 90;
         const hpRatio = Math.max(0, this.hp / this.maxHp);
         
         ctx.fillStyle = "#222";
         ctx.fillRect(px - barW/2, barY - barH/2, barW, barH);
-        
         const verticalWhiteTop = barY + crossLen/2 - crossLen * hpRatio;
         const horizontalBarTop = barY - barH/2;
-        
         let horizontalWhiteHeight;
-        
         if (verticalWhiteTop <= horizontalBarTop) {
             horizontalWhiteHeight = barH;
         } else if (verticalWhiteTop >= horizontalBarTop + barH) {
@@ -345,39 +657,20 @@ class Fighter {
         } else {
             horizontalWhiteHeight = (horizontalBarTop + barH) - verticalWhiteTop;
         }
-        
         if (horizontalWhiteHeight > 0) {
             ctx.fillStyle = "#fff";
-            ctx.fillRect(
-                px - barW/2,
-                barY + barH/2 - horizontalWhiteHeight,
-                barW,
-                horizontalWhiteHeight
-            );
+            ctx.fillRect(px - barW/2, barY + barH/2 - horizontalWhiteHeight, barW, horizontalWhiteHeight);
         }
-        
         ctx.fillStyle = "#222";
         ctx.fillRect(px - crossW/2, barY - crossLen/2, crossW, crossLen);
-        
         ctx.fillStyle = "#fff";
-        ctx.fillRect(
-            px - crossW/2,
-            barY + crossLen/2 - crossLen * hpRatio,
-            crossW,
-            crossLen * hpRatio
-        );
-        
-        // 数字：根据背景颜色决定文字颜色
-        // 判断数字位置在横臂白色区域还是黑色区域
+        ctx.fillRect(px - crossW/2, barY + crossLen/2 - crossLen * hpRatio, crossW, crossLen * hpRatio);
         const numberY = barY + 4;
         const whiteTop = barY + barH/2 - horizontalWhiteHeight;
         const whiteBottom = barY + barH/2;
-        
         if(numberY >= whiteTop && numberY <= whiteBottom){
-            // 背景是白色 → 数字黑色
             ctx.fillStyle = "#000";
         } else {
-            // 背景是黑色 → 数字白色
             ctx.fillStyle = "#fff";
         }
         ctx.font = "bold 12px system-ui";
@@ -388,34 +681,66 @@ class Fighter {
     drawDamageTexts(){
         for(let i = this.damageTexts.length - 1; i >= 0; i--){
             const dt = this.damageTexts[i];
-            
-            dt.y -= 1.5;
+            dt.y -= 0.8;
             dt.frames--;
-            
-            const alpha = dt.frames / 40;
-            
-            ctx.fillStyle = `rgba(255, 80, 80, ${alpha})`;
-            ctx.font = "bold 14px system-ui";
+            const alpha = dt.frames / 120;
+            ctx.fillStyle = `rgba(180, 0, 0, ${alpha})`;
+            ctx.font = "14px system-ui";
             ctx.textAlign = "center";
             ctx.fillText(dt.text, dt.x, dt.y);
-            
             if(dt.frames <= 0){
                 this.damageTexts.splice(i, 1);
             }
         }
     }
 
+    drawHealTexts(){
+        for(let i = this.healTexts.length - 1; i >= 0; i--){
+            const ht = this.healTexts[i];
+            ht.y -= 0.8;
+            ht.frames--;
+            const alpha = ht.frames / 120;
+            ctx.fillStyle = `rgba(0, 180, 0, ${alpha})`;
+            ctx.font = "14px system-ui";
+            ctx.textAlign = "center";
+            ctx.fillText(ht.text, ht.x, ht.y);
+            if(ht.frames <= 0){
+                this.healTexts.splice(i, 1);
+            }
+        }
+    }
+
+    drawStunText(){
+        if(this.stunTextFrames > 0){
+            const px = this.x + SPRITE_SIZE/2;
+            const py = this.y - 80 - (60 - this.stunTextFrames) * 1.5;
+            const alpha = this.stunTextFrames / 60;
+            ctx.save();
+            ctx.fillStyle = `rgba(255, 0, 0, ${alpha * 0.7})`;
+            ctx.fillRect(px - 90, py - 50, 180, 60);
+            ctx.strokeStyle = `rgba(255, 255, 0, ${alpha})`;
+            ctx.lineWidth = 4;
+            ctx.strokeRect(px - 90, py - 50, 180, 60);
+            ctx.fillStyle = `rgba(255, 255, 0, ${alpha})`;
+            ctx.font = "bold 70px system-ui";
+            ctx.textAlign = "center";
+            ctx.shadowColor = "#000";
+            ctx.shadowBlur = 15;
+            ctx.fillText("眩晕", px, py + 5);
+            ctx.restore();
+        }
+    }
+
     takeDamage(dmg, isBurn){
         if(!this.alive) return;
+        console.log(`${this.name} 受到 ${dmg} 伤害`);
         this.hp -= dmg;
-        
         this.damageTexts.push({
             text: isBurn ? `- ${dmg} 血量（灼烧）` : `- ${dmg} 血量`,
             x: this.x + SPRITE_SIZE/2,
             y: this.y - 20,
-            frames: 40
+            frames: 90
         });
-        
         if(this.hp <= 0){
             this.hp = 0;
             this.alive = false;
@@ -439,13 +764,18 @@ class Fighter {
 let fighters = [];
 let battleMode = 0;
 let modeTimer = 0;
+let winnerName = null;
+let chaseTurn = 0;
 
 function initFighters(){
     fighters = [];
+    bullets = [];
     battleMode = 0;
     modeTimer = 0;
-    const configA = ROLE_DATABASE[selectedA];
-    const configB = ROLE_DATABASE[selectedB];
+    winnerName = null;
+    chaseTurn = 0;
+    const configA = {...ROLE_DATABASE[selectedA], name: selectedA};
+    const configB = {...ROLE_DATABASE[selectedB], name: selectedB};
     fighters.push(new Fighter(configA, "A"));
     fighters.push(new Fighter(configB, "B"));
 }
@@ -461,110 +791,289 @@ function gameLoop(){
     }
 
     fighters.forEach(f => f.update());
-
-    fighters.forEach(f => {
-        f.img = f.normalImg;
-    });
-
-    const attacks = [];
     
-    for(let a of fighters){
-        if(!a.alive) continue;
-        for(let b of fighters){
-            if(!b.alive) continue;
-            if(a.team === b.team) continue;
-
-            const p1 = a.getCenter();
-            const p2 = b.getCenter();
-            const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-
-            if(a.displayAttackRange && dist < a.displayAttackRange){
-                a.img = a.attackImg;
-                a.attackImageFrames = 60;
-            }
-
-            if(battleMode === 1 && a.pauseFrames === 0 && b.pauseFrames === 0 && dist > a.attackRange && dist < a.attackRange * 1.5){
-                const dx = p2.x - p1.x;
-                const dy = p2.y - p1.y;
-                const distance = Math.max(1, dist);
-                a.x += (dx / distance) * 1.1;
-                a.y += (dy / distance) * 1.1;
-            }
-
-            if(dist <= a.attackRange && a.attackCooldown === 0 && b.attackCooldown === 0){
-                attacks.push({ a, b, dist, p1, p2 });
+    // 更新子弹
+    bullets.forEach(b => b.update());
+    
+    // 子弹命中检测
+    for(let b of bullets){
+        if(!b.alive) continue;
+        
+        for(let f of fighters){
+            if(!f.alive || f.team === b.team) continue;
+            const dist = Math.hypot(f.x + SPRITE_SIZE/2 - b.x, f.y + SPRITE_SIZE/2 - b.y);
+            if(dist < 40){
+                console.log(`子弹击中 ${f.name}，伤害 ${b.damage}`);
+                f.takeDamage(b.damage, false);
+                b.alive = false;
+                
+                // mj虫二命中计数
+                if(b.isMjText){
+                    const mj = fighters.find(f2 => f2.isMjChong && f2.team === b.team && f2.alive);
+                    if(mj){
+                        mj.mjSummonProgress += 0.2;
+                        if(mj.mjSummonProgress >= 1){
+                            mj.mjSummonProgress = 0;
+                            const type = Math.random() < 0.5 ? 'melee' : 'ranged';
+                            const configKey = type === 'melee' ? '召唤物近战' : '召唤物远程';
+                            const summonConfig = {...ROLE_DATABASE[configKey], name: configKey};
+                            fighters.push(new Fighter(summonConfig, mj.team));
+                            const newSummon = fighters[fighters.length - 1];
+                            newSummon.x = mj.x;
+                            newSummon.y = mj.y;
+                            newSummon.vx = (Math.random() - 0.5) * 2;
+                            newSummon.vy = (Math.random() - 0.5) * 2;
+                            
+                            // 出场音效
+                            if(type === 'melee'){
+                                const audio = new Audio('/mp3/mjjin.mp3');
+                                audio.volume = 0.5;
+                                audio.play();
+                            } else {
+                                const audio = new Audio('/mp3/mjyuan.mp3');
+                                audio.volume = 0.5;
+                                audio.play();
+                            }
+                        }
+                    }
+                }
+                break;
             }
         }
     }
     
-    // 第一阶段：伤害
-    for(const attack of attacks){
-        const { a, b } = attack;
+    bullets = bullets.filter(b => b.alive);
+
+    fighters.forEach(f => {
+        if(!f.comboMode){
+            f.img = f.normalImg;
+        }
+    });
+
+    const attacks = [];
+
+    for(let a of fighters){
+        if(!a.alive || a.comboMode || a.isMjChong) continue;
         
+        // 远程召唤物走子弹逻辑，不走普通攻击
+        if(a.name === '召唤物远程'){
+            if(a.attackCooldown === 0){
+                let target = null;
+                let minDist = Infinity;
+                for(let f of fighters){
+                    if(!f.alive || f.team === a.team) continue;
+                    const d = Math.hypot(f.x - a.x, f.y - a.y);
+                    if(d < minDist){
+                        minDist = d;
+                        target = f;
+                    }
+                }
+                if(target){
+                    const loveAudio = new Audio('/mp3/气泡音.mp3');   // 你的气泡音文件名
+                    loveAudio.volume = 0.4;
+                    loveAudio.play();
+                    
+                    bullets.push(new Bullet(
+                        a.x + SPRITE_SIZE/2, a.y + SPRITE_SIZE/2,
+                        target.x + SPRITE_SIZE/2, target.y + SPRITE_SIZE/2,
+                        a.damage, false, '/assets/mj3.png', a.team
+                    ));
+                    a.attackCooldown = 120;
+                }
+            }
+            continue;
+        }
+        // 近战：优先攻击最近的敌人
+        if(a.attackType === 'melee'){
+            let closestEnemy = null;
+            let closestDist = Infinity;
+            
+            for(let b of fighters){
+                if(!b.alive) continue;
+                if(a.team === b.team) continue;
+                
+                const p1 = a.getCenter();
+                const p2 = b.getCenter();
+                const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                
+                if(dist < closestDist){
+                    closestDist = dist;
+                    closestEnemy = b;
+                }
+            }
+            
+            if(closestEnemy){
+                const p1 = a.getCenter();
+                const p2 = closestEnemy.getCenter();
+                
+                if(a.displayAttackRange && closestDist < a.displayAttackRange){
+                    a.img = a.attackImg;
+                    a.attackImageFrames = 60;
+                }
+                
+                if(battleMode === 1 && a.pauseFrames === 0 && closestEnemy.pauseFrames === 0 && closestDist > a.attackRange && closestDist < a.attackRange * 1.5){
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const distance = Math.max(1, closestDist);
+                    a.x += (dx / distance) * 1.1;
+                    a.y += (dy / distance) * 1.1;
+                }
+                
+                if(closestDist < a.attackRange && a.attackCooldown === 0 && closestEnemy.attackCooldown === 0){
+                    attacks.push({ a, b: closestEnemy, dist: closestDist, p1, p2 });
+                }
+            }
+        } else {
+            // 远程：原有逻辑
+            for(let b of fighters){
+                if(!b.alive) continue;
+                if(a.team === b.team) continue;
+                
+                const p1 = a.getCenter();
+                const p2 = b.getCenter();
+                const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                
+                if(dist < a.attackRange && a.attackCooldown === 0 && b.attackCooldown === 0){
+                    attacks.push({ a, b, dist, p1, p2 });
+                }
+            }
+        }
+    }
+    
+    for(const attack of attacks){
+        const { a, b, dist, p1, p2 } = attack;
         let actualDamage = a.damage;
         a.attackCount++;
         
+        if(a.hasCombo && a.attackCount >= 4){
+            a.comboMode = true;
+            a.comboStep = 0;
+            a.comboTimer = 60;
+            a.comboTarget = b;
+            a.comboAttackCount = 0;
+            a.attackCount = 0;
+            a.img = a.attackImg;
+            continue;
+        }
+        
         if(a.evolve1NormalImg && a.attackCount >= 5 && a.evolveStage === 0){
             a.evolveStage = 1;
+            playDogEvolveSound();
             a.normalImg = a.evolve1NormalImg;
             a.attackImg = a.evolve1AttackImg || a.evolve1NormalImg;
             a.img = a.normalImg;
             a.attackCount = 0;
             a.damage = 30;
             a.burnDamage = 5;
+            a.pauseFrames = 180;
+            b.pauseFrames = 180;
+            continue;
         } else if(a.evolve2NormalImg && a.attackCount >= 5 && a.evolveStage === 1){
             a.evolveStage = 2;
+            playDogEvolveSound();
             a.normalImg = a.evolve2NormalImg;
             a.attackImg = a.evolve2AttackImg || a.evolve2NormalImg;
             a.img = a.normalImg;
             a.attackCount = 0;
             a.damage = 40;
             a.burnDamage = 8;
+            a.pauseFrames = 180;
+            b.pauseFrames = 180;
+            continue;
         }
         
         actualDamage = a.damage;
+        
+        if(a.name === '大狗嚼'){
+            playDogSound();
+        } else if(a.name === '哈基米'){
+            playDogSound();
+        } else if(a.name === '哈气猫'){
+            playCatHissSound();
+        }
+        
         b.takeDamage(actualDamage, false);
         
+        if(a.name === '大狗嚼' && !b.alive && a.alive && a.evolveStage > 0){
+            let healAmount = a.evolveStage === 1 ? 20 : 30;
+            a.hp = Math.min(a.maxHp, a.hp + healAmount);
+            a.healTexts.push({
+                text: `+ ${healAmount} 血量`,
+                x: a.x + SPRITE_SIZE/2,
+                y: a.y - 20,
+                frames: 120
+            });
+        }
+        
+        // 大狗嚼蓝火阶段每次攻击回20血
+        if(a.name === '大狗嚼' && a.evolveStage >= 1 && b.alive){
+            const healAmount = a.evolveStage === 1 ? 8 : 12;
+            a.hp = Math.min(a.maxHp, a.hp + healAmount);
+            a.healTexts.push({
+                text: `+ ${healAmount} 血量`,
+                x: a.x + SPRITE_SIZE/2,
+                y: a.y - 40,
+                frames: 90
+            });
+        }
+
         if(a.burnDamage > 0 && a.team !== b.team){
             b.applyBurn(a.burnDamage, 5);
         }
         
         a.img = a.attackImg;
-        a.attackCooldown = 60;
-        b.attackCooldown = 60;
-        a.pauseFrames = 60;
-        b.pauseFrames = 60;
-        a.attackDisplayFrames = 30;
-        b.attackDisplayFrames = 30;
-    }
-    
-    // 第二阶段：统一弹开
-    for(const attack of attacks){
-        const { a, b, dist, p1, p2 } = attack;
-        
+
         const dx = p2.x - p1.x;
         const dy = p2.y - p1.y;
         const distance = Math.max(1, dist);
         const nx = dx / distance;
         const ny = dy / distance;
-
         a.x -= nx * 5;
         a.y -= ny * 5;
         b.x += nx * 5;
         b.y += ny * 5;
-
         a.vx = -nx * a.speed;
         a.vy = -ny * a.speed;
         b.vx = nx * b.speed;
         b.vy = ny * b.speed;
+
+        if(a.attackType === 'ranged'){
+            a.attackCooldown = 120;
+        } else {
+            a.attackCooldown = 60;
+        }
+        b.attackCooldown = 60;
+        a.pauseFrames = 60;
+        b.pauseFrames = 60;
+        a.attackDisplayFrames = 30;
+        b.attackDisplayFrames = 30;
+        a.chaseTimer = 0;
+        
+        if(a.attackType === 'melee'){
+            chaseTurn = a.team === 'A' ? 2 : 1;
+        }
     }
 
+    bullets.forEach(b => b.draw());
+
     fighters.forEach(f => f.draw());
+    
+    if(winnerName){
+        ctx.fillStyle = "#000";
+        ctx.font = "bold 60px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText(`${winnerName} 胜`, canvas.width/2, canvas.height/3);
+    }
 
     const aliveA = fighters.filter(f => f.team === "A" && f.alive).length;
     const aliveB = fighters.filter(f => f.team === "B" && f.alive).length;
 
     if(aliveA === 0 || aliveB === 0){
+        if(aliveA > 0){
+            winnerName = selectedA;
+        } else {
+            winnerName = selectedB;
+        }
         requestAnimationFrame(gameLoop);
         return;
     }
@@ -573,6 +1082,7 @@ function gameLoop(){
 }
 
 document.getElementById("startBtn").addEventListener("click", () => {
+    getAudioCtx();
     if(!selectedA || !selectedB){
         alert("请先选择两个队伍！");
         return;
@@ -582,6 +1092,7 @@ document.getElementById("startBtn").addEventListener("click", () => {
     document.getElementById("startBtn").style.display = "none";
     requestAnimationFrame(gameLoop);
 });
+
 </script>
 </body>
 </html>
