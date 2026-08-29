@@ -84,8 +84,8 @@ const ROLE_DATABASE = {
     },
     'mj虫二': {
         normalImg: "/assets/mj.png", attackImg: "/assets/mj.png",
-        hp: 600, speed: 1.7, attackRange: 9999, displayAttackRange: 0,
-        damage: 8, burnDamage: 0, attackType: 'special', isMjChong: true
+        hp: 600, speed: 1.6, attackRange: 9999, displayAttackRange: 0,
+        damage: 5, burnDamage: 0, attackType: 'special', isMjChong: true
     },
     '训练木桩': {
         normalImg: "/assets/trainwood.png", attackImg: "/assets/trainwood.png",
@@ -519,9 +519,8 @@ class Fighter {
                 if(target){
                     console.log('mj虫二发射子弹，alive:', this.alive, 'hp:', this.hp);
                     const mjBulletAudio = new Audio('/mp3/mjzidan.mp3');
-                    mjBulletAudio.volume = 0.4;
-                    mjBulletAudio.play();                    
-                    playBubbleSound();
+                    mjBulletAudio.volume = 0.2;
+                    mjBulletAudio.play();  
                     
                     bullets.push(new Bullet(
                         this.x + SPRITE_SIZE/2, this.y + SPRITE_SIZE/2,
@@ -711,22 +710,18 @@ class Fighter {
     }
 
     drawStunText(){
-        if(this.stunTextFrames > 0){
+        if(this.stunFrames > 0){
             const px = this.x + SPRITE_SIZE/2;
-            const py = this.y - 80 - (60 - this.stunTextFrames) * 1.5;
-            const alpha = this.stunTextFrames / 60;
+            const py = this.y - 50;
+            const alpha = this.stunFrames > 120 ? 1 : (this.stunFrames - 60) / 60;
+            
             ctx.save();
-            ctx.fillStyle = `rgba(255, 0, 0, ${alpha * 0.7})`;
-            ctx.fillRect(px - 90, py - 50, 180, 60);
-            ctx.strokeStyle = `rgba(255, 255, 0, ${alpha})`;
-            ctx.lineWidth = 4;
-            ctx.strokeRect(px - 90, py - 50, 180, 60);
-            ctx.fillStyle = `rgba(255, 255, 0, ${alpha})`;
-            ctx.font = "bold 70px system-ui";
+            ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+            ctx.font = "bold 35px system-ui";
             ctx.textAlign = "center";
             ctx.shadowColor = "#000";
-            ctx.shadowBlur = 15;
-            ctx.fillText("眩晕", px, py + 5);
+            ctx.shadowBlur = 8;
+            ctx.fillText("⚡眩晕", px, py);
             ctx.restore();
         }
     }
@@ -812,12 +807,21 @@ function gameLoop(){
                     const mj = fighters.find(f2 => f2.isMjChong && f2.team === b.team && f2.alive);
                     if(mj){
                         mj.mjSummonProgress += 0.2;
+                        // mj子弹命中回1血
+                        mj.hp = Math.min(mj.maxHp, mj.hp + 1);
+                        mj.healTexts.push({
+                            text: `+ 1 血量`,
+                            x: mj.x + SPRITE_SIZE/2,
+                            y: mj.y - 40,
+                            frames: 60
+                        });                        
                         if(mj.mjSummonProgress >= 1){
                             mj.mjSummonProgress = 0;
                             const type = Math.random() < 0.5 ? 'melee' : 'ranged';
                             const configKey = type === 'melee' ? '召唤物近战' : '召唤物远程';
                             const summonConfig = {...ROLE_DATABASE[configKey], name: configKey};
                             fighters.push(new Fighter(summonConfig, mj.team));
+                            console.log('召唤物已创建，fighters数量:', fighters.length);
                             const newSummon = fighters[fighters.length - 1];
                             newSummon.x = mj.x;
                             newSummon.y = mj.y;
@@ -827,11 +831,11 @@ function gameLoop(){
                             // 出场音效
                             if(type === 'melee'){
                                 const audio = new Audio('/mp3/mjjin.mp3');
-                                audio.volume = 0.5;
+                                audio.volume = 0.9;
                                 audio.play();
                             } else {
                                 const audio = new Audio('/mp3/mjyuan.mp3');
-                                audio.volume = 0.5;
+                                audio.volume = 0.7;
                                 audio.play();
                             }
                         }
@@ -856,6 +860,7 @@ function gameLoop(){
         if(!a.alive || a.comboMode || a.isMjChong) continue;
         
         // 远程召唤物走子弹逻辑，不走普通攻击
+        // 远程召唤物走子弹逻辑，不走普通攻击
         if(a.name === '召唤物远程'){
             if(a.attackCooldown === 0){
                 let target = null;
@@ -869,9 +874,7 @@ function gameLoop(){
                     }
                 }
                 if(target){
-                    const loveAudio = new Audio('/mp3/气泡音.mp3');   // 你的气泡音文件名
-                    loveAudio.volume = 0.4;
-                    loveAudio.play();
+                    playBubbleSound();
                     
                     bullets.push(new Bullet(
                         a.x + SPRITE_SIZE/2, a.y + SPRITE_SIZE/2,
@@ -887,6 +890,8 @@ function gameLoop(){
         if(a.attackType === 'melee'){
             let closestEnemy = null;
             let closestDist = Infinity;
+            let inRangeEnemy = null;
+            let inRangeDist = Infinity;
             
             for(let b of fighters){
                 if(!b.alive) continue;
@@ -900,27 +905,37 @@ function gameLoop(){
                     closestDist = dist;
                     closestEnemy = b;
                 }
+                
+                // 优先找已经在攻击范围内的
+                if(dist < a.attackRange && dist < inRangeDist){
+                    inRangeDist = dist;
+                    inRangeEnemy = b;
+                }
             }
             
-            if(closestEnemy){
+            // 如果有攻击范围内的，打范围内的；否则追最近的
+            const target = inRangeEnemy || closestEnemy;
+            const targetDist = inRangeEnemy ? inRangeDist : closestDist;
+            
+            if(target){
                 const p1 = a.getCenter();
-                const p2 = closestEnemy.getCenter();
+                const p2 = target.getCenter();
                 
-                if(a.displayAttackRange && closestDist < a.displayAttackRange){
+                if(a.displayAttackRange && targetDist < a.displayAttackRange){
                     a.img = a.attackImg;
                     a.attackImageFrames = 60;
                 }
                 
-                if(battleMode === 1 && a.pauseFrames === 0 && closestEnemy.pauseFrames === 0 && closestDist > a.attackRange && closestDist < a.attackRange * 1.5){
+                if(battleMode === 1 && a.pauseFrames === 0 && target.pauseFrames === 0 && targetDist > a.attackRange && targetDist < a.attackRange * 1.5){
                     const dx = p2.x - p1.x;
                     const dy = p2.y - p1.y;
-                    const distance = Math.max(1, closestDist);
+                    const distance = Math.max(1, targetDist);
                     a.x += (dx / distance) * 1.1;
                     a.y += (dy / distance) * 1.1;
                 }
                 
-                if(closestDist < a.attackRange && a.attackCooldown === 0 && closestEnemy.attackCooldown === 0){
-                    attacks.push({ a, b: closestEnemy, dist: closestDist, p1, p2 });
+                if(targetDist < a.attackRange && a.attackCooldown === 0){
+                    attacks.push({ a, b: target, dist: targetDist, p1, p2 });
                 }
             }
         } else {
@@ -933,7 +948,7 @@ function gameLoop(){
                 const p2 = b.getCenter();
                 const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
                 
-                if(dist < a.attackRange && a.attackCooldown === 0 && b.attackCooldown === 0){
+                if(dist < a.attackRange && a.attackCooldown === 0){
                     attacks.push({ a, b, dist, p1, p2 });
                 }
             }
