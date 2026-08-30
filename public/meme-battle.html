@@ -38,22 +38,92 @@
     <div id="selectArea" style="display:flex; gap:30px; margin-bottom:10px;">
         <div style="background:#1a1a2e;border:2px solid #3498db;border-radius:8px;padding:15px;width:220px;text-align:center;">
             <div style="color:#3498db; font-size:18px; font-weight:bold; margin-bottom:10px;">左边队伍 P1</div>
-            <div id="leftChoices" style="display:flex; flex-direction:column; gap:8px;">
-                <div onclick="selectTeam('A', '大狗嚼', this)" style="background:#3498db;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐶 大狗嚼</div>
-                <div onclick="selectTeam('A', '哈基米', this)" style="background:#3498db;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐱 哈基米</div>
-                <div onclick="selectTeam('A', '哈气猫', this)" style="background:#3498db;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐱 哈气猫</div>
-                <div onclick="selectTeam('A', 'mj虫二', this)" style="background:#3498db;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐛 mj虫二</div>
-                <div onclick="selectTeam('A', '训练木桩', this)" style="background:#3498db;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🪵 训练木桩</div>
-            </div>
+<div id="leftChoices" style="display:flex; flex-direction:column; gap:8px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; background:#3498db;border-radius:6px;padding:8px;color:#fff;font-weight:bold;">
+        <span>🐶 大狗嚼</span>
+        <span style="display:flex; gap:5px; align-items:center;">
+            <button onclick="changeCount('A','大狗嚼',-1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">-</button>
+            <span id="count-A-大狗嚼" style="min-width:20px;text-align:center;">0</span>
+            <button onclick="changeCount('A','大狗嚼',1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">+</button>
+        </span>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; background:#3498db;border-radius:6px;padding:8px;color:#fff;font-weight:bold;">
+        <span>🐱 哈基米</span>
+        <span style="display:flex; gap:5px; align-items:center;">
+            <button onclick="changeCount('A','哈基米',-1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">-</button>
+            <span id="count-A-哈基米" style="min-width:20px;text-align:center;">0</span>
+            <button onclick="changeCount('A','哈基米',1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">+</button>
+        </span>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; background:#3498db;border-radius:6px;padding:8px;color:#fff;font-weight:bold;">
+        <span>🐱 哈气猫</span>
+        <span style="display:flex; gap:5px; align-items:center;">
+            <button onclick="changeCount('A','哈气猫',-1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">-</button>
+            <span id="count-A-哈气猫" style="min-width:20px;text-align:center;">0</span>
+            <button onclick="changeCount('A','哈气猫',1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">+</button>
+        </span>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; background:#3498db;border-radius:6px;padding:8px;color:#fff;font-weight:bold;">
+        <span>🐛 mj虫二</span>
+        <span style="display:flex; gap:5px; align-items:center;">
+            <button onclick="changeCount('A','mj虫二',-1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">-</button>
+            <span id="count-A-mj虫二" style="min-width:20px;text-align:center;">0</span>
+            <button onclick="changeCount('A','mj虫二',1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">+</button>
+        </span>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; background:#3498db;border-radius:6px;padding:8px;color:#fff;font-weight:bold;">
+        <span>🪵 训练木桩</span>
+        <span style="display:flex; gap:5px; align-items:center;">
+            <button onclick="changeCount('A','训练木桩',-1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">-</button>
+            <span id="count-A-训练木桩" style="min-width:20px;text-align:center;">0</span>
+            <button onclick="changeCount('A','训练木桩',1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">+</button>
+        </span>
+    </div>
+</div>
         </div>
         <div style="background:#1a1a2e;border:2px solid #e74c3c;border-radius:8px;padding:15px;width:220px;text-align:center;">
             <div style="color:#e74c3c; font-size:18px; font-weight:bold; margin-bottom:10px;">右边队伍 P2</div>
             <div id="rightChoices" style="display:flex; flex-direction:column; gap:8px;">
-                <div onclick="selectTeam('B', '大狗嚼', this)" style="background:#e74c3c;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐶 大狗嚼</div>
-                <div onclick="selectTeam('B', '哈基米', this)" style="background:#e74c3c;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐱 哈基米</div>
-                <div onclick="selectTeam('B', '哈气猫', this)" style="background:#e74c3c;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐱 哈气猫</div>
-                <div onclick="selectTeam('B', 'mj虫二', this)" style="background:#e74c3c;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🐛 mj虫二</div>
-                <div onclick="selectTeam('B', '训练木桩', this)" style="background:#e74c3c;border-radius:6px;padding:10px;cursor:pointer;color:#fff;font-weight:bold;">🪵 训练木桩</div>
+                <div style="display:flex; align-items:center; justify-content:space-between; background:#e74c3c;border-radius:6px;padding:8px;color:#fff;font-weight:bold;">
+                    <span>🐶 大狗嚼</span>
+                    <span style="display:flex; gap:5px; align-items:center;">
+                        <button onclick="changeCount('B','大狗嚼',-1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">-</button>
+                        <span id="count-B-大狗嚼" style="min-width:20px;text-align:center;">0</span>
+                        <button onclick="changeCount('B','大狗嚼',1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">+</button>
+                    </span>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; background:#e74c3c;border-radius:6px;padding:8px;color:#fff;font-weight:bold;">
+                    <span>🐱 哈基米</span>
+                    <span style="display:flex; gap:5px; align-items:center;">
+                        <button onclick="changeCount('B','哈基米',-1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">-</button>
+                        <span id="count-B-哈基米" style="min-width:20px;text-align:center;">0</span>
+                        <button onclick="changeCount('B','哈基米',1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">+</button>
+                    </span>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; background:#e74c3c;border-radius:6px;padding:8px;color:#fff;font-weight:bold;">
+                    <span>🐱 哈气猫</span>
+                    <span style="display:flex; gap:5px; align-items:center;">
+                        <button onclick="changeCount('B','哈气猫',-1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">-</button>
+                        <span id="count-B-哈气猫" style="min-width:20px;text-align:center;">0</span>
+                        <button onclick="changeCount('B','哈气猫',1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">+</button>
+                    </span>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; background:#e74c3c;border-radius:6px;padding:8px;color:#fff;font-weight:bold;">
+                    <span>🐛 mj虫二</span>
+                    <span style="display:flex; gap:5px; align-items:center;">
+                        <button onclick="changeCount('B','mj虫二',-1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">-</button>
+                        <span id="count-B-mj虫二" style="min-width:20px;text-align:center;">0</span>
+                        <button onclick="changeCount('B','mj虫二',1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">+</button>
+                    </span>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; background:#e74c3c;border-radius:6px;padding:8px;color:#fff;font-weight:bold;">
+                    <span>🪵 训练木桩</span>
+                    <span style="display:flex; gap:5px; align-items:center;">
+                        <button onclick="changeCount('B','训练木桩',-1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">-</button>
+                        <span id="count-B-训练木桩" style="min-width:20px;text-align:center;">0</span>
+                        <button onclick="changeCount('B','训练木桩',1)" style="background:#fff;border:none;border-radius:4px;width:24px;height:24px;cursor:pointer;font-weight:bold;">+</button>
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -178,31 +248,40 @@ function playBubbleSound(){
 // ====================================================
 
 // ======================【选择系统】======================
-let selectedA = null;
-let selectedB = null;
-function selectTeam(team, name, element){
-    if(team === 'A'){
-        selectedA = name;
-        document.querySelectorAll('#leftChoices div').forEach(el => {
-            el.style.opacity = '0.4';
-            el.style.border = 'none';
-        });
-        element.style.opacity = '1';
-        element.style.border = '3px solid #fff';
-    } else {
-        selectedB = name;
-        document.querySelectorAll('#rightChoices div').forEach(el => {
-            el.style.opacity = '0.4';
-            el.style.border = 'none';
-        });
-        element.style.opacity = '1';
-        element.style.border = '3px solid #fff';
-    }
+let selectedA = {};
+let selectedB = {};
+
+function changeCount(team, name, delta){
+    const selected = team === 'A' ? selectedA : selectedB;
+    const current = selected[name] || 0;
+    const newCount = Math.max(0, Math.min(10, current + delta));
+    selected[name] = newCount;
+    const countEl = document.getElementById(`count-${team}-${name}`);
+    if(countEl) countEl.innerText = newCount;
     updateTopBar();
 }
+
 function updateTopBar(){
-    const nameA = selectedA || "???";
-    const nameB = selectedB || "???";
+    const keysA = Object.keys(selectedA).filter(k => selectedA[k] > 0);
+    const keysB = Object.keys(selectedB).filter(k => selectedB[k] > 0);
+    
+    let nameA = "???";
+    let nameB = "???";
+    
+    // P1
+    if(keysA.length === 1){
+        nameA = keysA[0];
+    } else if(keysA.length > 1){
+        nameA = keysA.map(n => n[0]).join('');
+    }
+    
+    // P2
+    if(keysB.length === 1){
+        nameB = keysB[0];
+    } else if(keysB.length > 1){
+        nameB = keysB.map(n => n[0]).join('');
+    }
+    
     document.getElementById("topBar").innerText = `${nameA}  VS  ${nameB}`;
 }
 // ====================================================
@@ -769,10 +848,17 @@ function initFighters(){
     modeTimer = 0;
     winnerName = null;
     chaseTurn = 0;
-    const configA = {...ROLE_DATABASE[selectedA], name: selectedA};
-    const configB = {...ROLE_DATABASE[selectedB], name: selectedB};
-    fighters.push(new Fighter(configA, "A"));
-    fighters.push(new Fighter(configB, "B"));
+    
+    for(const [name, count] of Object.entries(selectedA)){
+        for(let i = 0; i < count; i++){
+            fighters.push(new Fighter({...ROLE_DATABASE[name], name}, "A"));
+        }
+    }
+    for(const [name, count] of Object.entries(selectedB)){
+        for(let i = 0; i < count; i++){
+            fighters.push(new Fighter({...ROLE_DATABASE[name], name}, "B"));
+        }
+    }
 }
 
 function gameLoop(){
@@ -1085,9 +1171,21 @@ function gameLoop(){
 
     if(aliveA === 0 || aliveB === 0){
         if(aliveA > 0){
-            winnerName = selectedA;
+            const alive = fighters.filter(f => f.team === "A" && f.alive);
+            const uniqueNames = [...new Set(alive.map(f => f.name))];
+            if(uniqueNames.length === 1){
+                winnerName = uniqueNames[0];
+            } else {
+                winnerName = uniqueNames.map(n => n[0]).join('');
+            }
         } else {
-            winnerName = selectedB;
+            const alive = fighters.filter(f => f.team === "B" && f.alive);
+            const uniqueNames = [...new Set(alive.map(f => f.name))];
+            if(uniqueNames.length === 1){
+                winnerName = uniqueNames[0];
+            } else {
+                winnerName = uniqueNames.map(n => n[0]).join('');
+            }
         }
         requestAnimationFrame(gameLoop);
         return;

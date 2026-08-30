@@ -6,7 +6,7 @@ function VS() {
       background: '#fff'
     }}>
       <iframe
-        src="/meme-battle.html"
+        src="/vs-game/index.html"
         style={{
           width: '100%',
           height: '100%',

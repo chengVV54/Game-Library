@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>VS 表情包对战模拟器</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="topBar">??? VS ???</div>
+
+    <div id="selectArea" style="display:flex; gap:30px; margin-bottom:10px;">
+        <div style="background:#1a1a2e;border:2px solid #3498db;border-radius:8px;padding:15px;width:220px;text-align:center;">
+            <div style="color:#3498db; font-size:18px; font-weight:bold; margin-bottom:10px;">左边队伍 P1</div>
+            <div id="leftChoices" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+        <div style="background:#1a1a2e;border:2px solid #e74c3c;border-radius:8px;padding:15px;width:220px;text-align:center;">
+            <div style="color:#e74c3c; font-size:18px; font-weight:bold; margin-bottom:10px;">右边队伍 P2</div>
+            <div id="rightChoices" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+    </div>
+
+    <button id="startBtn">⚔️ 开始对决</button>
+    <canvas id="gameCanvas" width="630" height="630"></canvas>
+    <div class="tip">@xzcc</div>
+
+    <script src="js/roles.js"></script>
+    <script src="js/sounds.js"></script>
+    <script src="js/canvas.js"></script>
+    <script src="js/bullet.js"></script>
+    <script src="js/fighter.js"></script>
+    <script src="js/selection.js"></script>
+    <script src="js/gameLoop.js"></script>
+</body>
+</html>

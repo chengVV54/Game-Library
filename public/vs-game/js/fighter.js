@@ -1,0 +1,597 @@
+class Fighter {
+    constructor(config, team){
+        this.team = team;
+        this.teamLabel = team === 'A' ? 'P1' : 'P2';
+        this.name = config.name || '';
+        this.maxHp = config.hp;
+        this.hp = config.hp;
+        this.speed = config.speed;
+        this.attackRange = config.attackRange;
+        this.displayAttackRange = config.displayAttackRange || 0;
+        this.damage = config.damage;
+        this.burnDamage = config.burnDamage || 0;
+        this.burnTickDamage = 0;
+        this.hasCombo = config.hasCombo || false;
+        this.attackType = config.attackType || 'melee';
+        this.isMjChong = config.isMjChong || false;
+        this.hasCharge = config.hasCharge || false;
+        this.chargeMode = false;
+        this.chargeStep = 0;
+        this.chargeTimer = 0;
+        this.chargeTarget = null;
+        this.chargeDragStartX = 0;
+        this.chargeDragStartY = 0;
+        this.chargeCooldown = 420;
+        this.energy = 0;
+        this.baseSpeed = config.speed;
+        this.skillSpeed = config.speed * 1.1;
+        this.energy = 0;              // 能量0-100
+        this.energyMax = 100;
+        this.alive = true;
+
+        this.normalImg = new Image();
+        this.normalImg.crossOrigin = "anonymous";
+        this.normalImg.src = config.normalImg;
+        this.attackImg = new Image();
+        this.attackImg.crossOrigin = "anonymous";
+        this.attackImg.src = config.attackImg;
+
+        // 从进化数据库预加载图片
+        const evo = EVOLUTION_DATABASE[this.name];
+        if(evo){
+            this.evolve1NormalImg = new Image();
+            this.evolve1NormalImg.crossOrigin = "anonymous";
+            this.evolve1NormalImg.src = evo.stage1.normalImg;
+            
+            this.evolve1AttackImg = new Image();
+            this.evolve1AttackImg.crossOrigin = "anonymous";
+            this.evolve1AttackImg.src = evo.stage1.attackImg;
+            
+            this.evolve2NormalImg = new Image();
+            this.evolve2NormalImg.crossOrigin = "anonymous";
+            this.evolve2NormalImg.src = evo.stage2.normalImg;
+            
+            this.evolve2AttackImg = new Image();
+            this.evolve2AttackImg.crossOrigin = "anonymous";
+            this.evolve2AttackImg.src = evo.stage2.attackImg;
+        } else {
+            this.evolve1NormalImg = null;
+            this.evolve1AttackImg = null;
+            this.evolve2NormalImg = null;
+            this.evolve2AttackImg = null;
+        }
+
+        this.img = this.normalImg;
+        this.speed = this.baseSpeed;
+
+        if(this.name === '训练木桩'){
+            this.x = canvas.width / 2 - SPRITE_SIZE / 2;
+            this.y = canvas.height / 2 - SPRITE_SIZE / 2;
+        } else {
+            this.x = Math.random() * (canvas.width - SPRITE_SIZE);
+            this.y = Math.random() * (canvas.height - SPRITE_SIZE);
+        }
+
+        this.vx = (Math.random() - 0.5) * 2 * this.speed;
+        this.vy = (Math.random() - 0.5) * 2 * this.speed;
+        this.pauseFrames = 0;
+        this.attackDisplayFrames = 0;
+        this.attackImageFrames = 0;
+        this.attackCount = 0;
+        this.attackCooldown = 0;
+        this.chaseTimer = 0;
+        this.evolveStage = 0;
+        this.damageTexts = [];
+        this.healTexts = [];
+        this.burnFrames = 0;
+        this.burnTickCounter = 0;
+        this.comboMode = false;
+        this.comboStep = 0;
+        this.comboTimer = 0;
+        this.comboTarget = null;
+        this.comboAttackCount = 0;
+        this.stunFrames = 0;
+        this.stunTextFrames = 0;
+        
+        // mj虫二专属
+        this.mjAttackInterval = 250;   // 初始2秒
+        this.mjHitCount = 0;           // 命中次数
+        this.mjSummonProgress = 0;     // 召唤进度
+    }
+
+    update(){
+        if(!this.alive) return;
+        
+        if(this.pauseFrames > 0){
+            this.pauseFrames--;
+            return;
+        }
+
+        if(this.stunFrames > 0){
+            this.stunFrames--;
+            return;
+        }
+
+        if(this.comboMode){
+            this.comboTimer--;
+            const target = this.comboTarget;
+            
+            if(this.comboStep === 0){
+                if(target && target.alive){
+                    const dx = target.x - this.x;
+                    const dy = target.y - this.y;
+                    const dist = Math.max(1, Math.hypot(dx, dy));
+                    this.x += (dx / dist) * 8;
+                    this.y += (dy / dist) * 8;
+                    if(dist < 30){
+                        this.comboStep = 1;
+                        this.comboTimer = 0;
+                    }
+                }
+            } else if(this.comboStep === 1){
+                if(target && target.alive){
+                    const dx = target.x - this.x;
+                    const dy = target.y - this.y;
+                    const dist = Math.max(1, Math.hypot(dx, dy));
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+                    target.x += nx * 20;
+                    target.y += ny * 20;
+                    if(target.x <= 0 || target.x + SPRITE_SIZE >= canvas.width ||
+                       target.y <= 0 || target.y + SPRITE_SIZE >= canvas.height){
+                        target.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, target.x));
+                        target.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, target.y));
+                        target.stunFrames = 300;
+                        target.stunTextFrames = 60;
+                        playBellSound();
+                        this.comboStep = 2;
+                        this.comboTimer = 0;
+                    }
+                }
+            } else if(this.comboStep === 2){
+                if(target && target.alive){
+                    const dx = target.x - this.x;
+                    const dy = target.y - this.y;
+                    const dist = Math.max(1, Math.hypot(dx, dy));
+                    this.x += (dx / dist) * 10;
+                    this.y += (dy / dist) * 10;
+                    if(dist < this.attackRange){
+                        this.comboStep = 3;
+                        this.comboTimer = 0;
+                        this.comboAttackCount = 0;
+                    }
+                }
+            } else if(this.comboStep === 3){
+                if(target && target.alive && this.comboTimer <= 0){
+                    playCatHissSound();
+                    target.takeDamage(this.damage * 0.4, false);
+                    this.comboAttackCount++;
+                    this.comboTimer = 24;
+                    if(this.comboAttackCount >= 5){
+                        this.comboMode = false;
+                        this.attackCooldown = 60;
+                        const dx = target.x - this.x;
+                        const dy = target.y - this.y;
+                        const dist = Math.max(1, Math.hypot(dx, dy));
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        this.x -= nx * 50;
+                        this.y -= ny * 50;
+                        this.vx = -nx * this.speed * 2;
+                        this.vy = -ny * this.speed * 2;
+                        this.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, this.x));
+                        this.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, this.y));
+                    }
+                }
+            }
+            return;
+        }
+
+            
+        // 美团飞肚肚能量系统
+        if(this.hasCharge && !this.chargeMode){
+            // 能量增长：8秒满
+            this.energy += 100 / 960;
+            
+            // 速度随能量从baseSpeed到skillSpeed
+            const speedProgress = this.energy / 100;
+            this.speed = this.baseSpeed + (this.skillSpeed - this.baseSpeed) * speedProgress;
+            
+            if(this.energy >= 100){
+                this.energy = 0;
+                this.speed = this.baseSpeed;
+                let target = null;
+                let minDist = Infinity;
+                for(let f of fighters){
+                    if(!f.alive || f.team === this.team) continue;
+                    const d = Math.hypot(f.x - this.x, f.y - this.y);
+                    if(d < minDist){ minDist = d; target = f; }
+                }
+                if(target){
+                    this.chargeMode = true;
+                    this.chargeStep = 0;
+                    this.chargeTimer = 120;
+                    this.chargeTarget = target;
+                    this.chargeDragStartX = target.x;
+                    this.chargeDragStartY = target.y;
+                    playFeiduduSound();
+                    this.img = this.attackImg;
+                }
+            }
+        }
+        
+
+        if(this.chargeMode){
+            this.chargeTimer--;
+            const target = this.chargeTarget;
+            
+            if(this.chargeStep === 0){
+                // 准备阶段：停留2秒
+                if(this.chargeTimer <= 0){
+                    this.chargeStep = 1;
+                    this.chargeTimer = 0;
+                }
+            } else if(this.chargeStep === 1){
+                // 冲向目标
+                if(target && target.alive){
+                    const dx = target.x - this.x;
+                    const dy = target.y - this.y;
+                    const dist = Math.max(1, Math.hypot(dx, dy));
+                    this.x += (dx / dist) * 7.5;
+                    this.y += (dy / dist) * 7.5;
+                    
+                    if(dist < 80){
+                        this.chargeStep = 2;
+                        // 接触目标立刻眩晕
+                        target.stunFrames = 999;
+                        target.stunTextFrames = 60;
+                        target.vx = 0;
+                        target.vy = 0;
+                    }
+                }
+            } else if(this.chargeStep === 2){
+                // 推着目标走
+                if(target && target.alive){
+                    target.stunFrames = 999;
+                    target.stunTextFrames = 60;
+                    target.x = this.x + (target.x - this.x) * 0.5;
+                    target.y = this.y + (target.y - this.y) * 0.5;
+                    const dragDist = Math.hypot(target.x - this.chargeDragStartX, target.y - this.chargeDragStartY);
+                    const maxDist = Math.hypot(canvas.width, canvas.height);
+                    target.stunFrames = Math.floor((dragDist / maxDist) * 600);
+                    target.stunTextFrames = 60;
+                    
+                    // 检查撞墙
+                    if(target.x <= 0 || target.x + SPRITE_SIZE >= canvas.width ||
+                       target.y <= 0 || target.y + SPRITE_SIZE >= canvas.height){
+                        target.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, target.x));
+                        target.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, target.y));
+                        playBellSound();
+                        target.takeDamage(this.damage,false);
+                        this.chargeMode = false;
+                        this.chargeStep = 0;
+                        this.chargeTarget = null;
+                        this.chargeCooldown = 420;
+                        this.energy = 0;
+                        this.pauseFrames = 60;
+                        this.img = this.normalImg;
+                    }
+                }
+            }
+            return;
+        }
+        if(this.attackCooldown > 0){
+            this.attackCooldown--;
+        }
+
+        if(this.attackDisplayFrames > 0){
+            this.attackDisplayFrames--;
+            this.img = this.attackImg;
+        }
+        if(this.attackImageFrames > 0){
+            this.attackImageFrames--;
+            this.img = this.attackImg;
+        }
+
+        if(this.burnFrames > 0){
+            this.burnFrames--;
+            this.burnTickCounter++;
+            if(this.burnTickCounter >= 60){
+                this.burnTickCounter = 0;
+                this.hp -= this.burnTickDamage;
+                this.damageTexts.push({
+                    text: `- ${this.burnTickDamage} 血量（灼烧）`,
+                    x: this.x + SPRITE_SIZE/2,
+                    y: this.y - 20,
+                    frames: 90
+                });
+                if(this.hp <= 0){
+                    this.hp = 0;
+                    this.alive = false;
+                    
+                    // 寻找施加灼烧的大狗嚼
+                    for(let f of fighters){
+                        if(f.alive && f.name === '大狗嚼' && f.team !== this.team){
+                            f.hp = Math.min(f.maxHp, f.hp + 100);
+                            f.healTexts.push({
+                                text: `+ 100 血量`,
+                                x: f.x + SPRITE_SIZE/2,
+                                y: f.y - 20,
+                                frames: 120
+                            });
+                            break;
+                        }
+                    }
+                    return;
+                }
+            }
+        }
+
+        // mj虫二专属攻击
+        if(this.isMjChong){
+            this.mjAttackInterval--;
+            if(this.mjAttackInterval <= 0){
+                let target = null;
+                let minDist = Infinity;
+                for(let f of fighters){
+                    if(!f.alive || f.team === this.team) continue;
+                    const d = Math.hypot(f.x - this.x, f.y - this.y);
+                    if(d < minDist){
+                        minDist = d;
+                        target = f;
+                    }
+                }
+                if(target){
+                    console.log('mj虫二发射子弹，alive:', this.alive, 'hp:', this.hp);
+                    const mjBulletAudio = new Audio('/mp3/mjzidan.mp3');
+                    mjBulletAudio.volume = 0.2;
+                    mjBulletAudio.play();  
+                    
+                    bullets.push(new Bullet(
+                        this.x + SPRITE_SIZE/2, this.y + SPRITE_SIZE/2,
+                        target.x + SPRITE_SIZE/2, target.y + SPRITE_SIZE/2,
+                        this.damage, true, null, this.team, true
+                    ));
+                    // 攻速递增
+                    this.mjAttackInterval = Math.max(20, 250 * Math.pow(0.975, this.mjHitCount));
+                    this.mjHitCount++;
+                }
+            }
+        }
+
+        // 近战追击
+        if(this.attackType === 'melee'){
+            this.chaseTimer++;
+            const meleeCount = fighters.filter(f => f.alive && f.attackType === 'melee').length;
+            if(meleeCount === 1){
+                if(this.chaseTimer > 840){
+                    this.chaseToEnemy();
+                }
+            } else if(meleeCount === 2){
+                const shouldChase = (chaseTurn === 1 && this.team === 'A') || 
+                                    (chaseTurn === 2 && this.team === 'B');
+                if(shouldChase && this.chaseTimer > 840){
+                    this.chaseToEnemy();
+                }
+            }
+        }
+        if(this.hasCharge && !this.chargeMode){
+            const speedMult = 1 + (this.energy / 100) * 0.8;
+            this.x += this.vx * speedMult;
+            this.y += this.vy * speedMult;
+        } else {
+            this.x += this.vx;
+            this.y += this.vy;
+        }
+        if(this.x <= 0 || this.x + SPRITE_SIZE >= canvas.width){
+            this.vx *= -1;
+        }
+        if(this.y <= 0 || this.y + SPRITE_SIZE >= canvas.height){
+            this.vy *= -1;
+        }
+        this.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, this.x));
+        this.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, this.y));
+    }
+
+    chaseToEnemy(){
+        let target = null;
+        let minDist = Infinity;
+        for(let f of fighters){
+            if(f === this || f.team === this.team || !f.alive) continue;
+            const d = Math.hypot(f.x - this.x, f.y - this.y);
+            if(d < minDist){
+                minDist = d;
+                target = f;
+            }
+        }
+        if(target){
+            const dx = target.x - this.x;
+            const dy = target.y - this.y;
+            const dist = Math.max(1, Math.hypot(dx, dy));
+            this.x += (dx / dist) * this.speed * 1.05;
+            this.y += (dy / dist) * this.speed * 1.05;
+        }
+    }
+
+    draw(){
+        if(!this.alive) return;
+        
+        let nearestEnemy = null;
+        let nearestDist = Infinity;
+        for(let f of fighters){
+            if(f === this || f.team === this.team || !f.alive) continue;
+            const dist = Math.hypot(f.x - this.x, f.y - this.y);
+            if(dist < nearestDist){
+                nearestDist = dist;
+                nearestEnemy = f;
+            }
+        }
+        
+        ctx.save();
+        if(nearestEnemy && nearestEnemy.x < this.x){
+            ctx.translate(this.x + SPRITE_SIZE, this.y);
+            ctx.scale(-1, 1);
+            ctx.drawImage(this.img, 0, 0, SPRITE_SIZE, SPRITE_SIZE);
+        } else {
+            ctx.drawImage(this.img, this.x, this.y, SPRITE_SIZE, SPRITE_SIZE);
+        }
+        ctx.restore();
+        
+        this.drawTeamLabel();
+        this.drawHpBar();
+        this.drawDamageTexts();
+        this.drawHealTexts();
+        this.drawStunText();
+        
+        // mj虫二召唤进度条
+        if(this.isMjChong){
+            const barX = this.x;
+            const barY = this.y + SPRITE_SIZE + 15;
+            ctx.fillStyle = "#333";
+            ctx.fillRect(barX, barY, SPRITE_SIZE, 8);
+            ctx.fillStyle = "#ffd700";
+            ctx.fillRect(barX, barY, SPRITE_SIZE * this.mjSummonProgress, 8);
+        }
+
+        // feidudu能量条
+        if(this.hasCharge){
+            const barX = this.x;
+            const barY = this.y + SPRITE_SIZE + 10;
+            ctx.fillStyle = "#333";
+            ctx.fillRect(barX, barY, SPRITE_SIZE, 6);
+            ctx.fillStyle = "#00ff00";
+            ctx.fillRect(barX, barY, SPRITE_SIZE * (this.energy / 100), 6);
+        }
+    }
+
+    drawTeamLabel(){
+        const px = this.x + SPRITE_SIZE/2;
+        const py = this.y - 10;
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 16px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText(this.teamLabel, px, py);
+    }
+
+    drawHpBar(){
+        const barW = 90;
+        const barH = 24;
+        const crossLen = 80;
+        const crossW = 28;
+        const px = this.x + SPRITE_SIZE/2;
+        const centerY = this.y + SPRITE_SIZE/2;
+        const isUpperHalf = centerY < canvas.height / 2;
+        const barY = isUpperHalf ? this.y + SPRITE_SIZE + 10 : this.y - 90;
+        const hpRatio = Math.max(0, this.hp / this.maxHp);
+        
+        ctx.fillStyle = "#222";
+        ctx.fillRect(px - barW/2, barY - barH/2, barW, barH);
+        const verticalWhiteTop = barY + crossLen/2 - crossLen * hpRatio;
+        const horizontalBarTop = barY - barH/2;
+        let horizontalWhiteHeight;
+        if (verticalWhiteTop <= horizontalBarTop) {
+            horizontalWhiteHeight = barH;
+        } else if (verticalWhiteTop >= horizontalBarTop + barH) {
+            horizontalWhiteHeight = 0;
+        } else {
+            horizontalWhiteHeight = (horizontalBarTop + barH) - verticalWhiteTop;
+        }
+        if (horizontalWhiteHeight > 0) {
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(px - barW/2, barY + barH/2 - horizontalWhiteHeight, barW, horizontalWhiteHeight);
+        }
+        ctx.fillStyle = "#222";
+        ctx.fillRect(px - crossW/2, barY - crossLen/2, crossW, crossLen);
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(px - crossW/2, barY + crossLen/2 - crossLen * hpRatio, crossW, crossLen * hpRatio);
+        const numberY = barY + 4;
+        const whiteTop = barY + barH/2 - horizontalWhiteHeight;
+        const whiteBottom = barY + barH/2;
+        if(numberY >= whiteTop && numberY <= whiteBottom){
+            ctx.fillStyle = "#000";
+        } else {
+            ctx.fillStyle = "#fff";
+        }
+        ctx.font = "bold 12px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText(`${Math.ceil(this.hp)}`, px, barY + 4);
+    }
+    
+    drawDamageTexts(){
+        for(let i = this.damageTexts.length - 1; i >= 0; i--){
+            const dt = this.damageTexts[i];
+            dt.y -= 0.8;
+            dt.frames--;
+            const alpha = dt.frames / 120;
+            ctx.fillStyle = `rgba(180, 0, 0, ${alpha})`;
+            ctx.font = "14px system-ui";
+            ctx.textAlign = "center";
+            ctx.fillText(dt.text, dt.x, dt.y);
+            if(dt.frames <= 0){
+                this.damageTexts.splice(i, 1);
+            }
+        }
+    }
+
+    drawHealTexts(){
+        for(let i = this.healTexts.length - 1; i >= 0; i--){
+            const ht = this.healTexts[i];
+            ht.y -= 0.8;
+            ht.frames--;
+            const alpha = ht.frames / 120;
+            ctx.fillStyle = `rgba(0, 180, 0, ${alpha})`;
+            ctx.font = "14px system-ui";
+            ctx.textAlign = "center";
+            ctx.fillText(ht.text, ht.x, ht.y);
+            if(ht.frames <= 0){
+                this.healTexts.splice(i, 1);
+            }
+        }
+    }
+
+    drawStunText(){
+        if(this.stunFrames > 0){
+            const px = this.x + SPRITE_SIZE/2;
+            const py = this.y - 50;
+            const alpha = this.stunFrames > 120 ? 1 : (this.stunFrames - 60) / 60;
+            
+            ctx.save();
+            ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+            ctx.font = "bold 35px system-ui";
+            ctx.textAlign = "center";
+            ctx.shadowColor = "#000";
+            ctx.shadowBlur = 8;
+            ctx.fillText("⚡眩晕", px, py);
+            ctx.restore();
+        }
+    }
+
+    takeDamage(dmg, isBurn){
+        if(!this.alive) return;
+        console.log(`${this.name} 受到 ${dmg} 伤害`);
+        this.hp -= dmg;
+        this.damageTexts.push({
+            text: isBurn ? `- ${dmg} 血量（灼烧）` : `- ${dmg} 血量`,
+            x: this.x + SPRITE_SIZE/2,
+            y: this.y - 20,
+            frames: 90
+        });
+        if(this.hp <= 0){
+            this.hp = 0;
+            this.alive = false;
+        }
+    }
+
+    applyBurn(damage, durationSeconds){
+        this.burnTickDamage = damage;
+        this.burnFrames = durationSeconds * 60;
+        this.burnTickCounter = 0;
+    }
+
+    getCenter(){
+        return {
+            x: this.x + SPRITE_SIZE/2,
+            y: this.y + SPRITE_SIZE/2
+        };
+    }
+}
