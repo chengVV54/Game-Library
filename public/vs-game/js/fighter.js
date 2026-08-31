@@ -109,6 +109,12 @@ class Fighter {
 
         if(this.stunFrames > 0){
             this.stunFrames--;
+            if(this.stunFrames === 0){
+                // 眩晕结束，恢复移动
+                const angle = Math.random() * Math.PI * 2;
+                this.vx = Math.cos(angle) * this.speed;
+                this.vy = Math.sin(angle) * this.speed;
+            }
             return;
         }
 
@@ -250,24 +256,51 @@ class Fighter {
                     }
                 }
             } else if(this.chargeStep === 2){
-                // 推着目标走
+                // 车推着物体走：feidudu在后，目标在前
                 if(target && target.alive){
                     target.stunFrames = 999;
                     target.stunTextFrames = 60;
-                    target.x = this.x + (target.x - this.x) * 0.5;
-                    target.y = this.y + (target.y - this.y) * 0.5;
-                    const dragDist = Math.hypot(target.x - this.chargeDragStartX, target.y - this.chargeDragStartY);
-                    const maxDist = Math.hypot(canvas.width, canvas.height);
-                    target.stunFrames = Math.floor((dragDist / maxDist) * 600);
-                    target.stunTextFrames = 60;
                     
-                    // 检查撞墙
+                    // 计算从feidudu指向目标的方向（推的方向）
+                    const dx = target.x - this.x;
+                    const dy = target.y - this.y;
+                    const dist = Math.max(1, Math.hypot(dx, dy));
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+                    
+                    // feidudu向前推进
+                    this.x += nx * 6;
+                    this.y += ny * 6;
+                    
+                    // 目标被推在前方，保持距离
+                    target.x = this.x + nx * (SPRITE_SIZE * 0.7);
+                    target.y = this.y + ny * (SPRITE_SIZE * 0.7);
+                    
+                    // 持续伤害：每帧造成小额伤害
+                    target.hp -= this.damage * 0.1;
+                    target.damageTexts.push({
+                        text: `- ${Math.ceil(this.damage * 0.1)} 血量`,
+                        x: target.x + SPRITE_SIZE/2,
+                        y: target.y - 20,
+                        frames: 90
+                    });
+                    if(target.hp <= 0){
+                        target.hp = 0;
+                        target.alive = false;
+                    }
+                    // 检查目标是否撞墙
                     if(target.x <= 0 || target.x + SPRITE_SIZE >= canvas.width ||
                        target.y <= 0 || target.y + SPRITE_SIZE >= canvas.height){
                         target.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, target.x));
                         target.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, target.y));
+                        
+                        const dragDist = Math.hypot(target.x - this.chargeDragStartX, target.y - this.chargeDragStartY);
+                        const maxDist = Math.hypot(canvas.width, canvas.height);
+                        target.stunFrames = Math.floor((dragDist / maxDist) * 600);
+                        target.stunTextFrames = 60;
+                        
                         playBellSound();
-                        target.takeDamage(this.damage,false);
+                        target.takeDamage(this.damage, false);
                         this.chargeMode = false;
                         this.chargeStep = 0;
                         this.chargeTarget = null;
@@ -275,6 +308,7 @@ class Fighter {
                         this.energy = 0;
                         this.pauseFrames = 60;
                         this.img = this.normalImg;
+                        this.speed = this.baseSpeed;
                     }
                 }
             }
@@ -520,7 +554,7 @@ class Fighter {
     drawDamageTexts(){
         for(let i = this.damageTexts.length - 1; i >= 0; i--){
             const dt = this.damageTexts[i];
-            dt.y -= 0.8;
+            dt.y -= 0.3;
             dt.frames--;
             const alpha = dt.frames / 120;
             ctx.fillStyle = `rgba(180, 0, 0, ${alpha})`;
@@ -536,7 +570,7 @@ class Fighter {
     drawHealTexts(){
         for(let i = this.healTexts.length - 1; i >= 0; i--){
             const ht = this.healTexts[i];
-            ht.y -= 0.8;
+            ht.y -= 0.3;
             ht.frames--;
             const alpha = ht.frames / 120;
             ctx.fillStyle = `rgba(0, 180, 0, ${alpha})`;
@@ -568,6 +602,7 @@ class Fighter {
 
     takeDamage(dmg, isBurn){
         if(!this.alive) return;
+        if(this.chargeMode) return;   // 冲锋期间无敌
         console.log(`${this.name} 受到 ${dmg} 伤害`);
         this.hp -= dmg;
         this.damageTexts.push({
