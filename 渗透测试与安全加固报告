@@ -1,0 +1,21 @@
+2026.9.1
+攻击一：窃取用户密码
+操作代码：JSON.parse(localStorage.getItem('users') || '[]')
+操作原理：浏览器开发者工具可以访问 localStorage。你的注册功能把用户密码明文存在 localStorage 的 users 键里。
+问题原因：前端代码设计错误，把敏感信息（密码）存储在浏览器本地。
+可能的后果：任何人访问网站都能提取所有账号密码
+                           用户在其他网站使用相同密码时，也被牵连
+                           攻击者登录任意账号，冒充用户操作
+攻击二：伪造身份登录
+操作代码：localStorage.setItem('user', JSON.stringify({ username: 'admin' }))
+然后访问：http://localhost:5173/
+操作原理：你的 PrivateRoute 组件判断登录状态的逻辑是：检查 localStorage 里是否有 user 键。我手动设置了这个键，系统就认为我已登录。
+问题原因：登录状态只存在前端，没有后端验证。用户可随意修改 localStorage。
+可能的后果：无需密码即可进入所有受保护页面
+                           可冒充任意用户提交成绩
+                           可篡改排行榜数据
+                           系统的身份验证形同虚设
+修复方向
+漏洞	                    修复
+密码明文存储	密码移到后端数据库，用bcrypt hash
+认证绕过	后端签发token，前端只存token，每次请求后端验证

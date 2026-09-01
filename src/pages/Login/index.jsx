@@ -7,17 +7,26 @@ function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
-    const users = JSON.parse(localStorage.getItem('users') || '[]')
-    const user = users.find(u => u.username === username && u.password === password)
-    
-    if (user) {
-      localStorage.setItem('user', JSON.stringify({ username }))
-      navigate('/')
-    } else {
-      setError('用户名或密码错误！')
+    try {
+      const response = await fetch('http://localhost:8080/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+      })
+      
+      const data = await response.json()
+      
+      if (data.status === 'ok') {
+        localStorage.setItem('user', JSON.stringify({ username }))
+        navigate('/')
+      } else {
+        setError(data.message || '用户名或密码错误！')
+      }
+    } catch(err) {
+      setError('无法连接服务器')
     }
   }
 
