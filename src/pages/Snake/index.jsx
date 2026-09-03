@@ -67,13 +67,16 @@ function Snake() {
       gameLoopRef.current = null
     }
     
-    // ====== 提交成绩到后端 ======
-    fetch('https://public-flint-throttle.ngrok-free.dev/api/score', {
+    // ====== 提交成绩到后端（带token和真实用户名） ======
+    const token = localStorage.getItem('token') || '';
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    fetch('http://localhost:8080/api/score', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: `username=xzcc&game=Snake&score=${score}`
+      body: `token=${token}&username=${user.username || 'anonymous'}&game=Snake&score=${score}`
     })
       .then(res => res.json())
       .then(data => {
@@ -186,7 +189,6 @@ function Snake() {
 
   return (
     <div className="game-page">
-      {/* 第一个返回按钮：有实际功能（点击后返回上一页） */}
       <div style={{ textAlign: 'left', marginBottom: '10px' }}>
         <button
           onClick={() => window.history.back()}
@@ -204,7 +206,6 @@ function Snake() {
         </button>
       </div>
 
-      {/* 第二个返回按钮：无实际操作，仅作为展示 */}
       <div style={{ textAlign: 'left', marginBottom: '10px' }}>
         <button
           onClick={() => window.history.back()}

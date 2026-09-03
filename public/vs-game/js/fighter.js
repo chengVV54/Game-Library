@@ -25,7 +25,6 @@ class Fighter {
         this.energy = 0;
         this.baseSpeed = config.speed;
         this.skillSpeed = config.speed * 1.1;
-        this.energy = 0;              // 能量0-100
         this.energyMax = 100;
         this.alive = true;
 
@@ -36,21 +35,17 @@ class Fighter {
         this.attackImg.crossOrigin = "anonymous";
         this.attackImg.src = config.attackImg;
 
-        // 从进化数据库预加载图片
         const evo = EVOLUTION_DATABASE[this.name];
         if(evo){
             this.evolve1NormalImg = new Image();
             this.evolve1NormalImg.crossOrigin = "anonymous";
             this.evolve1NormalImg.src = evo.stage1.normalImg;
-            
             this.evolve1AttackImg = new Image();
             this.evolve1AttackImg.crossOrigin = "anonymous";
             this.evolve1AttackImg.src = evo.stage1.attackImg;
-            
             this.evolve2NormalImg = new Image();
             this.evolve2NormalImg.crossOrigin = "anonymous";
             this.evolve2NormalImg.src = evo.stage2.normalImg;
-            
             this.evolve2AttackImg = new Image();
             this.evolve2AttackImg.crossOrigin = "anonymous";
             this.evolve2AttackImg.src = evo.stage2.attackImg;
@@ -92,11 +87,17 @@ class Fighter {
         this.comboAttackCount = 0;
         this.stunFrames = 0;
         this.stunTextFrames = 0;
-        
-        // mj虫二专属
-        this.mjAttackInterval = 250;   // 初始2秒
-        this.mjHitCount = 0;           // 命中次数
-        this.mjSummonProgress = 0;     // 召唤进度
+        this.hasNailong = config.hasNailong || false;
+        this.nailongStage = 0;
+        this.tauntCooldown = 600;
+        this.tauntTimer = 0;
+        this.taunting = false;
+        this.evolving = false;
+        this.evolveStep = 0;
+        this.evolveTimer = 0;
+        this.mjAttackInterval = 250;
+        this.mjHitCount = 0;
+        this.mjSummonProgress = 0;
     }
 
     update(){
@@ -110,12 +111,65 @@ class Fighter {
         if(this.stunFrames > 0){
             this.stunFrames--;
             if(this.stunFrames === 0){
-                // 眩晕结束，恢复移动
                 const angle = Math.random() * Math.PI * 2;
                 this.vx = Math.cos(angle) * this.speed;
                 this.vy = Math.sin(angle) * this.speed;
             }
             return;
+        }
+
+        // 进化处理（静止）
+        if(this.evolving){
+            this.evolveTimer--;
+            if(this.evolveStep === 0){
+                if(this.evolveTimer <= 0){
+                    this.evolveStep = 1;
+                    this.evolveTimer = 360;
+                    this.img = new Image();
+                    this.img.src = '/assets/nailongbaojinhua.png';
+                }
+            } else if(this.evolveStep === 1){
+                if(this.evolveTimer <= 0){
+                    this.evolving = false;
+                    this.nailongStage = 1;
+                    this.normalImg = new Image();
+                    this.normalImg.src = '/assets/nailongjinhua1.png';
+                    this.attackImg = new Image();
+                    this.attackImg.src = '/assets/nailongjinhua2.png';
+                    this.img = this.normalImg;
+                }
+            }
+            return;
+        }
+
+        // 奶龙嘲笑（不影响移动）
+        if(this.hasNailong){
+            this.tauntCooldown--;
+            if(this.tauntCooldown <= 0){
+                let target = null;
+                let minDist = Infinity;
+                for(let f of fighters){
+                    if(!f.alive || f.team === this.team) continue;
+                    const d = Math.hypot(f.x - this.x, f.y - this.y);
+                    if(d < minDist){ minDist = d; target = f; }
+                }
+                if(target){
+                    this.taunting = true;
+                    this.tauntTimer = 60;
+                    this.img = new Image();
+                    this.img.src = this.nailongStage === 0 ? 
+                        '/assets/nailonglaugh.png' : '/assets/nailongjinhualaugh.png';
+                }
+                this.tauntCooldown = 600;
+            }
+        }
+        
+        if(this.taunting){
+            this.tauntTimer--;
+            if(this.tauntTimer <= 0){
+                this.taunting = false;
+                this.img = this.normalImg;
+            }
         }
 
         if(this.comboMode){
@@ -193,13 +247,8 @@ class Fighter {
             return;
         }
 
-            
-        // 美团飞肚肚能量系统
         if(this.hasCharge && !this.chargeMode){
-            // 能量增长：8秒满
             this.energy += 100 / 960;
-            
-            // 速度随能量从baseSpeed到skillSpeed
             const speedProgress = this.energy / 100;
             this.speed = this.baseSpeed + (this.skillSpeed - this.baseSpeed) * speedProgress;
             
@@ -225,20 +274,17 @@ class Fighter {
                 }
             }
         }
-        
 
         if(this.chargeMode){
             this.chargeTimer--;
             const target = this.chargeTarget;
             
             if(this.chargeStep === 0){
-                // 准备阶段：停留2秒
                 if(this.chargeTimer <= 0){
                     this.chargeStep = 1;
                     this.chargeTimer = 0;
                 }
             } else if(this.chargeStep === 1){
-                // 冲向目标
                 if(target && target.alive){
                     const dx = target.x - this.x;
                     const dy = target.y - this.y;
@@ -248,7 +294,6 @@ class Fighter {
                     
                     if(dist < 80){
                         this.chargeStep = 2;
-                        // 接触目标立刻眩晕
                         target.stunFrames = 999;
                         target.stunTextFrames = 60;
                         target.vx = 0;
@@ -256,27 +301,22 @@ class Fighter {
                     }
                 }
             } else if(this.chargeStep === 2){
-                // 车推着物体走：feidudu在后，目标在前
                 if(target && target.alive){
                     target.stunFrames = 999;
                     target.stunTextFrames = 60;
                     
-                    // 计算从feidudu指向目标的方向（推的方向）
                     const dx = target.x - this.x;
                     const dy = target.y - this.y;
                     const dist = Math.max(1, Math.hypot(dx, dy));
                     const nx = dx / dist;
                     const ny = dy / dist;
                     
-                    // feidudu向前推进
                     this.x += nx * 6;
                     this.y += ny * 6;
                     
-                    // 目标被推在前方，保持距离
                     target.x = this.x + nx * (SPRITE_SIZE * 0.7);
                     target.y = this.y + ny * (SPRITE_SIZE * 0.7);
                     
-                    // 持续伤害：每帧造成小额伤害
                     target.hp -= this.damage * 0.1;
                     target.damageTexts.push({
                         text: `- ${Math.ceil(this.damage * 0.1)} 血量`,
@@ -288,7 +328,7 @@ class Fighter {
                         target.hp = 0;
                         target.alive = false;
                     }
-                    // 检查目标是否撞墙
+                    
                     if(target.x <= 0 || target.x + SPRITE_SIZE >= canvas.width ||
                        target.y <= 0 || target.y + SPRITE_SIZE >= canvas.height){
                         target.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, target.x));
@@ -314,6 +354,7 @@ class Fighter {
             }
             return;
         }
+
         if(this.attackCooldown > 0){
             this.attackCooldown--;
         }
@@ -342,8 +383,6 @@ class Fighter {
                 if(this.hp <= 0){
                     this.hp = 0;
                     this.alive = false;
-                    
-                    // 寻找施加灼烧的大狗嚼
                     for(let f of fighters){
                         if(f.alive && f.name === '大狗嚼' && f.team !== this.team){
                             f.hp = Math.min(f.maxHp, f.hp + 100);
@@ -361,7 +400,6 @@ class Fighter {
             }
         }
 
-        // mj虫二专属攻击
         if(this.isMjChong){
             this.mjAttackInterval--;
             if(this.mjAttackInterval <= 0){
@@ -370,13 +408,9 @@ class Fighter {
                 for(let f of fighters){
                     if(!f.alive || f.team === this.team) continue;
                     const d = Math.hypot(f.x - this.x, f.y - this.y);
-                    if(d < minDist){
-                        minDist = d;
-                        target = f;
-                    }
+                    if(d < minDist){ minDist = d; target = f; }
                 }
                 if(target){
-                    console.log('mj虫二发射子弹，alive:', this.alive, 'hp:', this.hp);
                     const mjBulletAudio = new Audio('/mp3/mjzidan.mp3');
                     mjBulletAudio.volume = 0.2;
                     mjBulletAudio.play();  
@@ -386,14 +420,12 @@ class Fighter {
                         target.x + SPRITE_SIZE/2, target.y + SPRITE_SIZE/2,
                         this.damage, true, null, this.team, true
                     ));
-                    // 攻速递增
                     this.mjAttackInterval = Math.max(20, 250 * Math.pow(0.975, this.mjHitCount));
                     this.mjHitCount++;
                 }
             }
         }
 
-        // 近战追击
         if(this.attackType === 'melee'){
             this.chaseTimer++;
             const meleeCount = fighters.filter(f => f.alive && f.attackType === 'melee').length;
@@ -409,6 +441,7 @@ class Fighter {
                 }
             }
         }
+
         if(this.hasCharge && !this.chargeMode){
             const speedMult = 1 + (this.energy / 100) * 0.8;
             this.x += this.vx * speedMult;
@@ -417,6 +450,7 @@ class Fighter {
             this.x += this.vx;
             this.y += this.vy;
         }
+
         if(this.x <= 0 || this.x + SPRITE_SIZE >= canvas.width){
             this.vx *= -1;
         }
@@ -477,7 +511,6 @@ class Fighter {
         this.drawHealTexts();
         this.drawStunText();
         
-        // mj虫二召唤进度条
         if(this.isMjChong){
             const barX = this.x;
             const barY = this.y + SPRITE_SIZE + 15;
@@ -487,7 +520,6 @@ class Fighter {
             ctx.fillRect(barX, barY, SPRITE_SIZE * this.mjSummonProgress, 8);
         }
 
-        // feidudu能量条
         if(this.hasCharge){
             const barX = this.x;
             const barY = this.y + SPRITE_SIZE + 10;
@@ -602,7 +634,8 @@ class Fighter {
 
     takeDamage(dmg, isBurn){
         if(!this.alive) return;
-        if(this.chargeMode) return;   // 冲锋期间无敌
+        if(this.evolving) return;
+        if(this.chargeMode) return;   // feidudu冲锋期间霸体
         console.log(`${this.name} 受到 ${dmg} 伤害`);
         this.hp -= dmg;
         this.damageTexts.push({

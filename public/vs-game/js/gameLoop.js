@@ -36,10 +36,8 @@ function gameLoop(){
 
     fighters.forEach(f => f.update());
     
-    // 更新子弹
     bullets.forEach(b => b.update());
     
-    // 子弹命中检测
     for(let b of bullets){
         if(!b.alive) continue;
         
@@ -47,16 +45,13 @@ function gameLoop(){
             if(!f.alive || f.team === b.team) continue;
             const dist = Math.hypot(f.x + SPRITE_SIZE/2 - b.x, f.y + SPRITE_SIZE/2 - b.y);
             if(dist < 40){
-                console.log(`子弹击中 ${f.name}，伤害 ${b.damage}`);
                 f.takeDamage(b.damage, false);
                 b.alive = false;
                 
-                // mj虫二命中计数
                 if(b.isMjText){
                     const mj = fighters.find(f2 => f2.isMjChong && f2.team === b.team && f2.alive);
                     if(mj){
                         mj.mjSummonProgress += 0.2;
-                        // mj子弹命中回1血
                         mj.hp = Math.min(mj.maxHp, mj.hp + 1);
                         mj.healTexts.push({
                             text: `+ 1 血量`,
@@ -70,14 +65,12 @@ function gameLoop(){
                             const configKey = type === 'melee' ? '召唤物近战' : '召唤物远程';
                             const summonConfig = {...SUMMON_DATABASE[configKey], name: configKey};
                             fighters.push(new Fighter(summonConfig, mj.team));
-                            console.log('召唤物已创建，fighters数量:', fighters.length);
                             const newSummon = fighters[fighters.length - 1];
                             newSummon.x = mj.x;
                             newSummon.y = mj.y;
                             newSummon.vx = (Math.random() - 0.5) * 2;
                             newSummon.vy = (Math.random() - 0.5) * 2;
                             
-                            // 出场音效
                             if(type === 'melee'){
                                 const audio = new Audio('/mp3/mjjin.mp3');
                                 audio.volume = 0.9;
@@ -98,7 +91,7 @@ function gameLoop(){
     bullets = bullets.filter(b => b.alive);
 
     fighters.forEach(f => {
-        if(!f.comboMode && !f.chargeMode){
+        if(!f.comboMode && !f.chargeMode && !f.evolving){
             f.img = f.normalImg;
         }
     });
@@ -106,10 +99,8 @@ function gameLoop(){
     const attacks = [];
 
     for(let a of fighters){
-        if(!a.alive || a.comboMode || a.isMjChong || a.hasCharge) continue;
+        if(!a.alive || a.comboMode || a.isMjChong || a.hasCharge || a.evolving) continue;
         
-        // 远程召唤物走子弹逻辑，不走普通攻击
-        // 远程召唤物走子弹逻辑，不走普通攻击
         if(a.name === '召唤物远程'){
             if(a.attackCooldown === 0){
                 let target = null;
@@ -135,7 +126,7 @@ function gameLoop(){
             }
             continue;
         }
-        // 近战：优先攻击最近的敌人
+        
         if(a.attackType === 'melee'){
             let closestEnemy = null;
             let closestDist = Infinity;
@@ -155,14 +146,12 @@ function gameLoop(){
                     closestEnemy = b;
                 }
                 
-                // 优先找已经在攻击范围内的
                 if(dist < a.attackRange && dist < inRangeDist){
                     inRangeDist = dist;
                     inRangeEnemy = b;
                 }
             }
             
-            // 如果有攻击范围内的，打范围内的；否则追最近的
             const target = inRangeEnemy || closestEnemy;
             const targetDist = inRangeEnemy ? inRangeDist : closestDist;
             
@@ -188,7 +177,6 @@ function gameLoop(){
                 }
             }
         } else {
-            // 远程：原有逻辑
             for(let b of fighters){
                 if(!b.alive) continue;
                 if(a.team === b.team) continue;
@@ -229,7 +217,16 @@ function gameLoop(){
             a.img = a.attackImg;
             continue;
         }
-        
+        if(a.hasNailong && a.nailongStage === 0 && a.attackCount >= 5 && !a.evolving){
+            console.log('奶龙开始进化！');
+            a.evolving = true;
+            a.evolveStep = 0;
+            a.evolveTimer = 180;
+            a.img = new Image();
+            a.img.src = '/assets/nailongbao.png';
+            a.attackCount = 0;
+            continue;
+        }
         if(EVOLUTION_DATABASE[a.name] && a.attackCount >= 5 && a.evolveStage === 0){
             const evo = EVOLUTION_DATABASE[a.name].stage1;
             a.evolveStage = 1;
@@ -271,6 +268,24 @@ function gameLoop(){
         }
         
         b.takeDamage(actualDamage, false);
+
+       if(a.hasNailong && a.nailongStage === 1 && b.alive && !b.chargeMode){
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const dist = Math.max(1, Math.hypot(dx, dy));
+            b.x += (dx / dist) * 200;
+            b.y += (dy / dist) * 200;
+            
+            if(b.x <= 0 || b.x + SPRITE_SIZE >= canvas.width ||
+               b.y <= 0 || b.y + SPRITE_SIZE >= canvas.height){
+                b.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, b.x));
+                b.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, b.y));
+                b.stunFrames = 180;
+                b.stunTextFrames = 60;
+                b.takeDamage(a.damage * 1.5, false);
+                playBellSound();
+            }
+        }
         
         if(a.name === '大狗嚼' && !b.alive && a.alive && a.evolveStage > 0){
             let healAmount = a.evolveStage === 1 ? 20 : 30;
@@ -283,7 +298,6 @@ function gameLoop(){
             });
         }
         
-        // 大狗嚼蓝火阶段每次攻击回20血
         if(a.name === '大狗嚼' && a.evolveStage >= 1 && b.alive){
             const healAmount = a.evolveStage === 1 ? 8 : 12;
             a.hp = Math.min(a.maxHp, a.hp + healAmount);
@@ -350,19 +364,11 @@ function gameLoop(){
         if(aliveA > 0){
             const alive = fighters.filter(f => f.team === "A" && f.alive);
             const uniqueNames = [...new Set(alive.map(f => f.name))];
-            if(uniqueNames.length === 1){
-                winnerName = uniqueNames[0];
-            } else {
-                winnerName = uniqueNames.map(n => n[0]).join('');
-            }
+            winnerName = uniqueNames.length === 1 ? uniqueNames[0] : uniqueNames.map(n => n[0]).join('');
         } else {
             const alive = fighters.filter(f => f.team === "B" && f.alive);
             const uniqueNames = [...new Set(alive.map(f => f.name))];
-            if(uniqueNames.length === 1){
-                winnerName = uniqueNames[0];
-            } else {
-                winnerName = uniqueNames.map(n => n[0]).join('');
-            }
+            winnerName = uniqueNames.length === 1 ? uniqueNames[0] : uniqueNames.map(n => n[0]).join('');
         }
         requestAnimationFrame(gameLoop);
         return;

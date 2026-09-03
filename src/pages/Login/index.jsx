@@ -25,6 +25,11 @@ function Login() {
       } else {
         setError(data.message || '用户名或密码错误！')
       }
+      if (data.status === 'ok') {
+          localStorage.setItem('token', data.token);
+         localStorage.setItem('user', JSON.stringify({ username: data.username }));
+          navigate('/');
+      }
     } catch(err) {
       setError('无法连接服务器')
     }

@@ -5,10 +5,16 @@ function Register() {
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (password !== confirmPassword) {
+      setError('两次输入的密码不一致')
+      return
+    }
     
     try {
       const response = await fetch('http://localhost:8080/api/register', {
@@ -49,6 +55,15 @@ function Register() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>确认密码</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
           </div>

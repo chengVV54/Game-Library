@@ -36,6 +36,18 @@ const ROLE_DATABASE = {
         burnDamage: 0,
         attackType: 'special',
         hasCharge: true
+    },
+    '奶龙': {
+        normalImg: "/assets/nailong1.png",
+        attackImg: "/assets/nailong2.png",
+        hp: 400,
+        speed: 1.6,
+        attackRange: 100,
+        displayAttackRange: 150,
+        damage: 20,
+        burnDamage: 0,
+        attackType: 'melee',
+        hasNailong: true
     }
     
 };
