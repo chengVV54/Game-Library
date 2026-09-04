@@ -99,8 +99,7 @@ function gameLoop(){
     const attacks = [];
 
     for(let a of fighters){
-        if(!a.alive || a.comboMode || a.isMjChong || a.hasCharge || a.evolving) continue;
-        
+        if(!a.alive || a.comboMode || a.isMjChong || a.hasCharge || a.evolving || a.cloneMode || a.charmedFrames > 0) continue; 
         if(a.name === '召唤物远程'){
             if(a.attackCooldown === 0){
                 let target = null;
@@ -219,9 +218,10 @@ function gameLoop(){
         }
         if(a.hasNailong && a.nailongStage === 0 && a.attackCount >= 5 && !a.evolving){
             console.log('奶龙开始进化！');
+            playNailongEvolveSound();
             a.evolving = true;
             a.evolveStep = 0;
-            a.evolveTimer = 180;
+            a.evolveTimer = 300;
             a.img = new Image();
             a.img.src = '/assets/nailongbao.png';
             a.attackCount = 0;
@@ -265,6 +265,9 @@ function gameLoop(){
             playDogSound();
         } else if(a.name === '哈气猫'){
             playCatHissSound();
+        }
+        if(a.hasNailong){
+            playNailongAttackSound();
         }
         
         b.takeDamage(actualDamage, false);

@@ -65,3 +65,28 @@ function playFeiduduSound(){
     audio.volume = 0.7;
     audio.play();
 }
+let nailongAttackIndex = 0;
+const nailongAttackSounds = [
+    new Audio('/mp3/nailong1.mp3'),
+    new Audio('/mp3/nailong2.mp3'),
+    new Audio('/mp3/nailong3.mp3')
+];
+
+function playNailongAttackSound(){
+    nailongAttackSounds[nailongAttackIndex].volume = 0.6;
+    nailongAttackSounds[nailongAttackIndex].currentTime = 0;
+    nailongAttackSounds[nailongAttackIndex].play();
+    nailongAttackIndex = (nailongAttackIndex + 1) % 3;
+}
+
+function playNailongEvolveSound(){
+    const audio = new Audio('/mp3/nailongjinhua.mp3');
+    audio.volume = 0.8;
+    audio.play();
+}
+
+function playNailongLaughSound(){
+    const audio = new Audio('/mp3/nailonglaugh.mp3');
+    audio.volume = 0.7;
+    audio.play();
+}

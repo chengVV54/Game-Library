@@ -84,4 +84,4 @@ const EVOLUTION_DATABASE = {
     }
 };
 
-const SPRITE_SIZE = 120;
+const SPRITE_SIZE = 144;

@@ -95,6 +95,16 @@ class Fighter {
         this.evolving = false;
         this.evolveStep = 0;
         this.evolveTimer = 0;
+        this.hitCount = 0;
+        this.cloneMode = false;
+        this.clones = [];
+        this.clonePhase = 0;
+        this.cloneTimer = 0;
+        this.cloneTarget = null;
+        this.originalX = 0;
+        this.originalY = 0;
+        this.charmedFrames = 0;
+        this.charmTextFrames = 0;
         this.mjAttackInterval = 250;
         this.mjHitCount = 0;
         this.mjSummonProgress = 0;
@@ -118,15 +128,82 @@ class Fighter {
             return;
         }
 
-        // 进化处理（静止）
+        if(this.charmedFrames > 0){
+            this.charmedFrames--;
+            if(this.charmTextFrames > 0) this.charmTextFrames--;
+            
+            if(this.charmedFrames % 30 === 0){
+                this.hp -= 2;
+                this.damageTexts.push({
+                    text: `- 2 血量`,
+                    x: this.x + SPRITE_SIZE/2,
+                    y: this.y - 20,
+                    frames: 60
+                });
+                if(this.hp <= 0){
+                    this.hp = 0;
+                    this.alive = false;
+                }
+            }
+            // 不return，继续正常移动
+        }
+        
+        if(this.cloneMode){
+            this.cloneTimer--;
+            const target = this.cloneTarget;
+            
+            if(this.clonePhase === 0){
+                if(this.cloneTimer <= 0){
+                    this.clonePhase = 1;
+                    this.cloneTimer = 0;
+                }
+            } else if(this.clonePhase === 1){
+                if(target && target.alive){
+                    for(let c of this.clones){
+                        const dx = target.x - c.x;
+                        const dy = target.y - c.y;
+                        const dist = Math.max(1, Math.hypot(dx, dy));
+                        c.x += (dx / dist) * 3;
+                        c.y += (dy / dist) * 3;
+                        c.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, c.x));
+                        c.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, c.y));
+                    }
+                    
+                    const allArrived = this.clones.every(c => {
+                        const d = Math.hypot(target.x - c.x, target.y - c.y);
+                        return d < 50;
+                    });
+                    
+                    if(allArrived){
+                        this.clonePhase = 2;
+                    }
+                }
+            } else if(this.clonePhase === 2){
+                if(target){
+                    target.takeDamage(this.damage * 2, false);
+                    target.charmedFrames = 300;
+                    target.charmTextFrames = 60;
+                    playBellSound();
+                }
+                this.cloneMode = false;
+                this.clones = [];
+                this.x = this.originalX;
+                this.y = this.originalY;
+                this.img = this.normalImg;
+                this.pauseFrames = 30;
+            }
+            return;
+        }
+        
         if(this.evolving){
             this.evolveTimer--;
             if(this.evolveStep === 0){
                 if(this.evolveTimer <= 0){
                     this.evolveStep = 1;
-                    this.evolveTimer = 360;
+                    this.evolveTimer = 600;
                     this.img = new Image();
                     this.img.src = '/assets/nailongbaojinhua.png';
+                    playNailongLaughSound();
                 }
             } else if(this.evolveStep === 1){
                 if(this.evolveTimer <= 0){
@@ -142,35 +219,7 @@ class Fighter {
             return;
         }
 
-        // 奶龙嘲笑（不影响移动）
-        if(this.hasNailong){
-            this.tauntCooldown--;
-            if(this.tauntCooldown <= 0){
-                let target = null;
-                let minDist = Infinity;
-                for(let f of fighters){
-                    if(!f.alive || f.team === this.team) continue;
-                    const d = Math.hypot(f.x - this.x, f.y - this.y);
-                    if(d < minDist){ minDist = d; target = f; }
-                }
-                if(target){
-                    this.taunting = true;
-                    this.tauntTimer = 60;
-                    this.img = new Image();
-                    this.img.src = this.nailongStage === 0 ? 
-                        '/assets/nailonglaugh.png' : '/assets/nailongjinhualaugh.png';
-                }
-                this.tauntCooldown = 600;
-            }
-        }
-        
-        if(this.taunting){
-            this.tauntTimer--;
-            if(this.tauntTimer <= 0){
-                this.taunting = false;
-                this.img = this.normalImg;
-            }
-        }
+
 
         if(this.comboMode){
             this.comboTimer--;
@@ -442,13 +491,14 @@ class Fighter {
             }
         }
 
+        const charmedMult = this.charmedFrames > 0 ? 0.5 : 1;
         if(this.hasCharge && !this.chargeMode){
-            const speedMult = 1 + (this.energy / 100) * 0.8;
+            const speedMult = (1 + (this.energy / 100) * 0.8) * charmedMult;
             this.x += this.vx * speedMult;
             this.y += this.vy * speedMult;
         } else {
-            this.x += this.vx;
-            this.y += this.vy;
+            this.x += this.vx * charmedMult;
+            this.y += this.vy * charmedMult;
         }
 
         if(this.x <= 0 || this.x + SPRITE_SIZE >= canvas.width){
@@ -496,7 +546,11 @@ class Fighter {
         }
         
         ctx.save();
-        if(nearestEnemy && nearestEnemy.x < this.x){
+        if(this.charmedFrames > 0){
+            ctx.translate(this.x + SPRITE_SIZE/2, this.y + SPRITE_SIZE/2);
+            ctx.rotate(Math.PI / 2);
+            ctx.drawImage(this.img, -SPRITE_SIZE/2, -SPRITE_SIZE/2, SPRITE_SIZE, SPRITE_SIZE);
+        } else if(nearestEnemy && nearestEnemy.x < this.x){
             ctx.translate(this.x + SPRITE_SIZE, this.y);
             ctx.scale(-1, 1);
             ctx.drawImage(this.img, 0, 0, SPRITE_SIZE, SPRITE_SIZE);
@@ -504,6 +558,15 @@ class Fighter {
             ctx.drawImage(this.img, this.x, this.y, SPRITE_SIZE, SPRITE_SIZE);
         }
         ctx.restore();
+        
+        if(this.cloneMode && this.clones.length > 0){
+            const cloneImg = new Image();
+            cloneImg.src = this.nailongStage === 0 ? 
+                '/assets/nailonglaugh.png' : '/assets/nailongjinhualaugh.png';
+            for(let c of this.clones){
+                ctx.drawImage(cloneImg, c.x, c.y, SPRITE_SIZE, SPRITE_SIZE);
+            }
+        }
         
         this.drawTeamLabel();
         this.drawHpBar();
@@ -527,6 +590,18 @@ class Fighter {
             ctx.fillRect(barX, barY, SPRITE_SIZE, 6);
             ctx.fillStyle = "#00ff00";
             ctx.fillRect(barX, barY, SPRITE_SIZE * (this.energy / 100), 6);
+        }
+
+        if(this.charmedFrames > 0){
+            const px = this.x + SPRITE_SIZE/2;
+            const py = this.y - 50;
+            const alpha = Math.min(1, this.charmedFrames / 60);
+            ctx.save();
+            ctx.fillStyle = `rgba(255, 105, 180, ${alpha})`;
+            ctx.font = "bold 35px system-ui";
+            ctx.textAlign = "center";
+            ctx.fillText("💕魅惑", px, py);
+            ctx.restore();
         }
     }
 
@@ -635,9 +710,17 @@ class Fighter {
     takeDamage(dmg, isBurn){
         if(!this.alive) return;
         if(this.evolving) return;
-        if(this.chargeMode) return;   // feidudu冲锋期间霸体
+        if(this.chargeMode) return;
+        if(this.cloneMode) return;
         console.log(`${this.name} 受到 ${dmg} 伤害`);
         this.hp -= dmg;
+        
+        if(this.hasNailong && !this.cloneMode && !this.evolving){
+            this.hitCount++;
+            if(this.hitCount >= 5){
+                this.startCloneAttack();
+            }
+        }
         this.damageTexts.push({
             text: isBurn ? `- ${dmg} 血量（灼烧）` : `- ${dmg} 血量`,
             x: this.x + SPRITE_SIZE/2,
@@ -654,6 +737,41 @@ class Fighter {
         this.burnTickDamage = damage;
         this.burnFrames = durationSeconds * 60;
         this.burnTickCounter = 0;
+    }
+
+    startCloneAttack(){
+        this.cloneMode = true;
+        this.clonePhase = 0;
+        this.cloneTimer = 120;
+        this.originalX = this.x;
+        this.originalY = this.y;
+        this.hitCount = 0;
+        
+        this.img = new Image();
+        this.img.src = this.nailongStage === 0 ? 
+            '/assets/nailonglaugh.png' : '/assets/nailongjinhualaugh.png';
+        playNailongLaughSound();
+        let target = null;
+        let minDist = Infinity;
+        for(let f of fighters){
+            if(!f.alive || f.team === this.team) continue;
+            const d = Math.hypot(f.x - this.x, f.y - this.y);
+            if(d < minDist){ minDist = d; target = f; }
+        }
+        this.cloneTarget = target;
+        
+        this.clones = [];
+        for(let i = 0; i < 10; i++){
+            this.clones.push({
+                x: this.x + Math.random() * 300 - 150,
+                y: this.y + Math.random() * 300 - 150
+            });
+        }
+        
+        if(target){
+            target.charmedFrames = 300;
+            target.charmTextFrames = 60;
+        }
     }
 
     getCenter(){
