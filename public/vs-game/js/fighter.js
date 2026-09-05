@@ -88,6 +88,15 @@ class Fighter {
         this.stunFrames = 0;
         this.stunTextFrames = 0;
         this.hasNailong = config.hasNailong || false;
+        this.hasBababoyi = config.hasBababoyi || false;
+        this.bababoyiMode = false;
+        this.bababoyiTimer = 0;
+        this.skillCooldown = 0;
+        this.skillMaxCooldown = 600;
+        this.skillProgress = 0;
+        this.spinning = false;
+        this.spinTimer = 0;
+        this.elasticFrames = 0;
         this.nailongStage = 0;
         this.tauntCooldown = 600;
         this.tauntTimer = 0;
@@ -145,7 +154,6 @@ class Fighter {
                     this.alive = false;
                 }
             }
-            // 不return，继续正常移动
         }
         
         if(this.cloneMode){
@@ -203,7 +211,6 @@ class Fighter {
                     this.evolveTimer = 600;
                     this.img = new Image();
                     this.img.src = '/assets/nailongbaojinhua.png';
-                    playNailongLaughSound();
                 }
             } else if(this.evolveStep === 1){
                 if(this.evolveTimer <= 0){
@@ -219,7 +226,39 @@ class Fighter {
             return;
         }
 
-
+        if(this.hasBababoyi){
+            if(!this.bababoyiMode){
+                this.skillCooldown++;
+                this.skillProgress = this.skillCooldown / this.skillMaxCooldown;
+                
+                if(this.skillCooldown >= this.skillMaxCooldown){
+                    this.spinning = true;
+                    this.spinTimer = 60;
+                    const skillAudio = new Audio('/mp3/bababoyi.mp3');
+                    skillAudio.volume = 0.7;
+                    skillAudio.play();
+                    this.bababoyiMode = true;
+                    this.bababoyiTimer = 600;
+                    this.skillCooldown = 0;
+                }
+            } else {
+                this.bababoyiTimer--;
+                this.skillProgress = this.bababoyiTimer / 600;
+                if(this.bababoyiTimer <= 0){
+                    this.bababoyiMode = false;
+                    this.skillProgress = 0;
+                }
+            }
+        }
+        
+        if(this.spinning){
+            this.spinTimer--;
+            if(this.spinTimer <= 0) this.spinning = false;
+        }
+        
+        if(this.elasticFrames > 0){
+            this.elasticFrames--;
+        }
 
         if(this.comboMode){
             this.comboTimer--;
@@ -490,7 +529,61 @@ class Fighter {
                 }
             }
         }
-
+        
+        if(this.bababoyiMode){
+            let target = null;
+            let minDist = Infinity;
+            for(let f of fighters){
+                if(!f.alive || f.team === this.team) continue;
+                const d = Math.hypot(f.x - this.x, f.y - this.y);
+                if(d < minDist){ minDist = d; target = f; }
+            }
+            if(target){
+                const dx = target.x - this.x;
+                const dy = target.y - this.y;
+                const dist = Math.max(1, Math.hypot(dx, dy));
+                
+                if(dist > SPRITE_SIZE){
+                    this.x += (dx / dist) * 3;
+                    this.y += (dy / dist) * 3;
+                } else if(this.attackCooldown === 0){
+                    target.takeDamage(this.damage * 0.8, false);
+                    this.attackCooldown = 60;
+                    this.elasticFrames = 20;
+                    
+                    const duangAudio = new Audio('/mp3/duang.mp3');
+                    duangAudio.volume = 0.6;
+                    duangAudio.play();
+                    
+                    const nx = dx / dist;
+                    const ny = dy / dist;
+                    
+                    // 对方被弹走
+                    target.x += nx * 100;
+                    target.y += ny * 100;
+                    
+                    // 自身反弹
+                    this.x -= nx * 100;
+                    this.y -= ny * 100;
+                    
+                    // 检查对方撞墙
+                    if(target.x <= 0 || target.x + SPRITE_SIZE >= canvas.width ||
+                       target.y <= 0 || target.y + SPRITE_SIZE >= canvas.height){
+                        target.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, target.x));
+                        target.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, target.y));
+                        target.stunFrames = 180;
+                        target.stunTextFrames = 60;
+                        target.takeDamage(this.damage * 0.8, false);
+                        playBellSound();
+                    }
+                    
+                    // 确保自身不出界
+                    this.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, this.x));
+                    this.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, this.y));
+                }
+            }
+        }
+        
         const charmedMult = this.charmedFrames > 0 ? 0.5 : 1;
         if(this.hasCharge && !this.chargeMode){
             const speedMult = (1 + (this.energy / 100) * 0.8) * charmedMult;
@@ -534,6 +627,15 @@ class Fighter {
     draw(){
         if(!this.alive) return;
         
+        let scaleX = 1;
+        let scaleY = 1;
+        
+        if(this.elasticFrames > 0){
+            const progress = this.elasticFrames / 20;
+            scaleX = 1 + Math.sin(progress * Math.PI) * 0.3;
+            scaleY = 1 - Math.sin(progress * Math.PI) * 0.2;
+        }
+        
         let nearestEnemy = null;
         let nearestDist = Infinity;
         for(let f of fighters){
@@ -546,16 +648,26 @@ class Fighter {
         }
         
         ctx.save();
-        if(this.charmedFrames > 0){
+        if(this.bababoyiMode){
+            ctx.translate(this.x + SPRITE_SIZE/2, this.y + SPRITE_SIZE/2);
+            ctx.rotate(this.bababoyiTimer * 0.3);
+            ctx.scale(scaleX, scaleY);
+            ctx.drawImage(this.img, -SPRITE_SIZE/2, -SPRITE_SIZE/2, SPRITE_SIZE, SPRITE_SIZE);
+        } else if(this.charmedFrames > 0){
             ctx.translate(this.x + SPRITE_SIZE/2, this.y + SPRITE_SIZE/2);
             ctx.rotate(Math.PI / 2);
+            ctx.scale(scaleX, scaleY);
             ctx.drawImage(this.img, -SPRITE_SIZE/2, -SPRITE_SIZE/2, SPRITE_SIZE, SPRITE_SIZE);
         } else if(nearestEnemy && nearestEnemy.x < this.x){
             ctx.translate(this.x + SPRITE_SIZE, this.y);
-            ctx.scale(-1, 1);
+            ctx.scale(-scaleX, scaleY);
             ctx.drawImage(this.img, 0, 0, SPRITE_SIZE, SPRITE_SIZE);
         } else {
-            ctx.drawImage(this.img, this.x, this.y, SPRITE_SIZE, SPRITE_SIZE);
+            ctx.save();
+            ctx.translate(this.x + SPRITE_SIZE/2, this.y + SPRITE_SIZE/2);
+            ctx.scale(scaleX, scaleY);
+            ctx.drawImage(this.img, -SPRITE_SIZE/2, -SPRITE_SIZE/2, SPRITE_SIZE, SPRITE_SIZE);
+            ctx.restore();
         }
         ctx.restore();
         
@@ -590,6 +702,15 @@ class Fighter {
             ctx.fillRect(barX, barY, SPRITE_SIZE, 6);
             ctx.fillStyle = "#00ff00";
             ctx.fillRect(barX, barY, SPRITE_SIZE * (this.energy / 100), 6);
+        }
+
+        if(this.hasBababoyi){
+            const barX = this.x;
+            const barY = this.y + SPRITE_SIZE + 16;
+            ctx.fillStyle = "#333";
+            ctx.fillRect(barX, barY, SPRITE_SIZE, 6);
+            ctx.fillStyle = "#ff8800";
+            ctx.fillRect(barX, barY, SPRITE_SIZE * this.skillProgress, 6);
         }
 
         if(this.charmedFrames > 0){
@@ -713,7 +834,9 @@ class Fighter {
         if(this.chargeMode) return;
         if(this.cloneMode) return;
         console.log(`${this.name} 受到 ${dmg} 伤害`);
-        this.hp -= dmg;
+        let actualDmg = dmg;
+        if(this.bababoyiMode) actualDmg = dmg * 0.5;
+        this.hp -= actualDmg;
         
         if(this.hasNailong && !this.cloneMode && !this.evolving){
             this.hitCount++;

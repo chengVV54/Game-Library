@@ -5,10 +5,17 @@ const ROLE_DATABASE = {
         hp: 300, speed: 1.8, attackRange: 100, displayAttackRange: 150,
         damage: 25, burnDamage: 0, attackType: 'melee'
     },
-    '哈基米': {
-        normalImg: "/assets/cat-1.png", attackImg: "/assets/cat-1.png",
-        hp: 280, speed: 1.9, attackRange: 100, displayAttackRange: 150,
-        damage: 20, burnDamage: 0, attackType: 'ranged'
+    '巴巴波一': {
+        normalImg: "/assets/cat-1.png",
+        attackImg: "/assets/cat-1.png",
+        hp: 500,
+        speed: 1.9,
+        attackRange: 100,
+        displayAttackRange: 150,
+        damage: 20,
+        burnDamage: 0,
+        attackType: 'ranged',
+        hasBababoyi: true
     },
     '哈气猫': {
         normalImg: "/assets/standcat-1.png", attackImg: "/assets/standcat-2.png",
@@ -28,7 +35,7 @@ const ROLE_DATABASE = {
     '美团飞肚肚': {
         normalImg: "/assets/meituanfeidudu.png",
         attackImg: "/assets/meituanqixing.png",
-        hp: 400,
+        hp: 500,
         speed: 1.5,
         attackRange: 9999,
         displayAttackRange: 0,

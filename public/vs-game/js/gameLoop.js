@@ -12,14 +12,25 @@ function initFighters(){
     winnerName = null;
     chaseTurn = 0;
     
+    let aIndex = 0;
     for(const [name, count] of Object.entries(selectedA)){
         for(let i = 0; i < count; i++){
-            fighters.push(new Fighter({...ROLE_DATABASE[name], name}, "A"));
+            const f = new Fighter({...ROLE_DATABASE[name], name}, "A");
+            f.x = SPRITE_SIZE * 0.5;
+            f.y = canvas.height / 2 - SPRITE_SIZE / 2 + aIndex * SPRITE_SIZE;
+            aIndex++;
+            fighters.push(f);
         }
     }
+    
+    let bIndex = 0;
     for(const [name, count] of Object.entries(selectedB)){
         for(let i = 0; i < count; i++){
-            fighters.push(new Fighter({...ROLE_DATABASE[name], name}, "B"));
+            const f = new Fighter({...ROLE_DATABASE[name], name}, "B");
+            f.x = canvas.width - SPRITE_SIZE * 1.5;
+            f.y = canvas.height / 2 - SPRITE_SIZE / 2 + bIndex * SPRITE_SIZE;
+            bIndex++;
+            fighters.push(f);
         }
     }
 }
@@ -271,7 +282,44 @@ function gameLoop(){
         }
         
         b.takeDamage(actualDamage, false);
-
+        if(a.hasBababoyi && b.alive && !b.chargeMode){
+            const duangAudio = new Audio('/mp3/duang.mp3');
+            duangAudio.volume = 0.6;
+            duangAudio.play();
+            a.elasticFrames = 20;
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const dist = Math.max(1, Math.hypot(dx, dy));
+            const nx = dx / dist;
+            const ny = dy / dist;
+            
+            const pushDistance = 300;
+            const pushSteps = 15;
+            let step = 0;
+            const pushInterval = setInterval(() => {
+                step++;
+                b.x += nx * (pushDistance / pushSteps);
+                b.y += ny * (pushDistance / pushSteps);
+                
+                if(b.x <= 0 || b.x + SPRITE_SIZE >= canvas.width ||
+                   b.y <= 0 || b.y + SPRITE_SIZE >= canvas.height){
+                    b.x = Math.max(0, Math.min(canvas.width - SPRITE_SIZE, b.x));
+                    b.y = Math.max(0, Math.min(canvas.height - SPRITE_SIZE, b.y));
+                    b.stunFrames = 180;
+                    b.stunTextFrames = 60;
+                    b.takeDamage(a.damage * 1.5, false);
+                    playBellSound();
+                    clearInterval(pushInterval);
+                }
+                
+                if(step >= pushSteps){
+                    clearInterval(pushInterval);
+                }
+            }, 16);
+            // 自身反弹
+            a.x -= (b.x - a.x) / Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)) * 50;
+            a.y -= (b.y - a.y) / Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)) * 50;
+        }
        if(a.hasNailong && a.nailongStage === 1 && b.alive && !b.chargeMode){
             const dx = b.x - a.x;
             const dy = b.y - a.y;
@@ -364,14 +412,26 @@ function gameLoop(){
     const aliveB = fighters.filter(f => f.team === "B" && f.alive).length;
 
     if(aliveA === 0 || aliveB === 0){
-        if(aliveA > 0){
-            const alive = fighters.filter(f => f.team === "A" && f.alive);
-            const uniqueNames = [...new Set(alive.map(f => f.name))];
-            winnerName = uniqueNames.length === 1 ? uniqueNames[0] : uniqueNames.map(n => n[0]).join('');
-        } else {
-            const alive = fighters.filter(f => f.team === "B" && f.alive);
-            const uniqueNames = [...new Set(alive.map(f => f.name))];
-            winnerName = uniqueNames.length === 1 ? uniqueNames[0] : uniqueNames.map(n => n[0]).join('');
+        if(winnerName === null){
+            if(aliveA > 0){
+                const alive = fighters.filter(f => f.team === "A" && f.alive);
+                const uniqueNames = [...new Set(alive.map(f => f.name))];
+                winnerName = uniqueNames.length === 1 ? uniqueNames[0] : uniqueNames.map(n => n[0]).join('');
+                if(uniqueNames.includes('奶龙')){
+                    const nailongWinAudio = new Audio('/mp3/nailongjinhua.mp3');
+                    nailongWinAudio.volume = 0.8;
+                    nailongWinAudio.play();
+                }
+            } else {
+                const alive = fighters.filter(f => f.team === "B" && f.alive);
+                const uniqueNames = [...new Set(alive.map(f => f.name))];
+                winnerName = uniqueNames.length === 1 ? uniqueNames[0] : uniqueNames.map(n => n[0]).join('');
+                if(uniqueNames.includes('奶龙')){
+                    const nailongWinAudio = new Audio('/mp3/nailongjinhua.mp3');
+                    nailongWinAudio.volume = 0.8;
+                    nailongWinAudio.play();
+                }
+            }
         }
         requestAnimationFrame(gameLoop);
         return;
